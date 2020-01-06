@@ -71,12 +71,14 @@ def status():
             return "CONNECTED", v_ip,id
     return "DISCONNECTED" , v_ip,id
 
-def connect():
-    pass
+def connect(serverid=947373,disconnect_current = True):
+    win_cmd = f'nordvpn -c -i {serverid}'
+    subprocess.Popen(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+    return status()
+
+def disconnect():
+    subprocess.Popen('nordvpn -d',stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+    return status()
     
-
-
-
-
 if __name__ == "__main__":
-   print(status())
+   print(disconnect())
