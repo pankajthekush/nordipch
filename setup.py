@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="nordvpch",
+    name="nordipch",
     version="0.0.1",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
