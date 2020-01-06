@@ -74,11 +74,22 @@ def status():
 def connect(serverid=947373,disconnect_current = True):
     win_cmd = f'nordvpn -c -i {serverid}'
     subprocess.Popen(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+    #Wait till connected
+    for i in range(10):
+        state,_,_ = status()
+        if state == 'DISCONNECTED':
+            print(f'Waiting for connection {i}')
+            sleep(3)
+            state,_,_ = status()
+        else:
+            return status()
     return status()
+
+
 
 def disconnect():
     subprocess.Popen('nordvpn -d',stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     return status()
     
 if __name__ == "__main__":
-   print(disconnect())
+    print(connect())
