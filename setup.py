@@ -5,14 +5,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="nordipch",
-    version="0.0.1",
+    version="0.0.2",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     description="A Package to change NordVPN servers",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/pankajthekush/nordipch",
-    packages=setuptools.find_packages(),
+    packages=['nordipch'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: Windows 10",
