@@ -5,7 +5,6 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="nordvpch",
-    packages=['nordvch'],
     version="0.0.1",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
