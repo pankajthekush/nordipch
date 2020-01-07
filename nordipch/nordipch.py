@@ -30,7 +30,7 @@ def  get_current_ip():
     retry_count = 1
     max_retry_count = 30
 
-    while current_api_text is None and retry_count < max_retry_count:
+    while (current_api_text is None and retry_count < max_retry_count) or len(current_api_text) == 0:
         try:
             current_api_text =requests.get(current_ip_api).text.strip()
             ipaddress.ip_address(current_api_text)  #This validates the IP returned
@@ -92,4 +92,4 @@ def disconnect():
     return status()
     
 if __name__ == "__main__":
-    print(connect())
+    print(disconnect())
