@@ -9,6 +9,11 @@ import logging
 
 logging.basicConfig(filename='nordipch.log', level=logging.DEBUG,
                     format='%(asctime)s:%(levelname)s:%(message)s:%(lineno)d')
+console = logging.StreamHandler()
+console.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s:%(lineno)d')
+console.setFormatter(formatter)
+logging.getLogger("").addHandler(console)
 
 nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
@@ -113,4 +118,4 @@ def disconnect():
     return retstatus
     
 if __name__ == "__main__":
-    print(disconnect())
+    print(connect())
