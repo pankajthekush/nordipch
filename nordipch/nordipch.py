@@ -5,6 +5,7 @@ from time import sleep
 import ipaddress
 import subprocess
 import logging
+import os
 
 
 logging.basicConfig(filename='nordipch.log', level=logging.DEBUG,
@@ -87,6 +88,14 @@ def status():
     return "DISCONNECTED" , v_ip,id
 
 def connect(serverid=947373):
+
+    if os.path.exists('CONN.LOCK'):
+        logging.debug("Connection still in progress , Aborting...")
+        return ("INPROGRESS","INPROGRESS","INPROGRESS")
+
+    with open("CONN.LOCK",'w') as f:
+        f.write("CONNINPROGRESS")
+
     win_cmd = f'nordvpn -c -i {serverid}'
     subprocess.Popen(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     #Wait till connected
@@ -95,7 +104,7 @@ def connect(serverid=947373):
             state,_,_ = status()
         except TypeError as error:
             logging.debug("Could Not Connect , re-tries exceeded {}".format(error))
-            return ("Could Not Connect , re-tries exceeded {}".format(error))
+            return ("ERROR",'ERROR','ERROR')
 
         if state == 'DISCONNECTED':
             logging.debug(f'Trying Connection : {i}...')
@@ -104,9 +113,20 @@ def connect(serverid=947373):
         else:
             retstatus = status()
             logging.debug(retstatus)
+            try:
+                os.remove('CONN.LOCK')
+            except:
+                pass
             return retstatus
+    
     retstatus = status()
     logging.debug(retstatus)
+
+    try:
+        os.remove('CONN.LOCK')
+    except:
+        pass
+
     return retstatus
 
 
