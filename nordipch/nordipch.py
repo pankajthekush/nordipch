@@ -6,7 +6,7 @@ import ipaddress
 import subprocess
 import logging
 import os
-
+import time
 
 logging.basicConfig(filename='nordipch.log', level=logging.DEBUG,
                     format='%(asctime)s:%(levelname)s:%(message)s:%(lineno)d')
@@ -87,7 +87,16 @@ def status():
     logging.debug(f"DISCONNECTED, {v_ip},{id}")
     return "DISCONNECTED" , v_ip,id
 
-def connect(serverid=947373):
+def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False):
+
+
+    is_recent_run = recent_run(run_time_limit)
+
+    #If run recently , then do  return and exit
+    if is_recent_run and OVER_RIDE_TIME == False:
+        return ("RECENT","RECENT","RECENT") 
+    else:
+        pass
 
     if os.path.exists('CONN.LOCK'):
         logging.debug("Connection still in progress , Aborting...")
@@ -96,6 +105,12 @@ def connect(serverid=947373):
     with open("CONN.LOCK",'w') as f:
         f.write("CONNINPROGRESS")
 
+    #Disconnect First
+    logging.debug("Disconnecting..")
+    subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+    #wait 5 Seconds for disconnection
+    time.sleep(5)
+    logging.debug("Start Connect..")
     win_cmd = f'nordvpn -c -i {serverid}'
     subprocess.Popen(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     #Wait till connected
@@ -109,6 +124,7 @@ def connect(serverid=947373):
         if state == 'DISCONNECTED':
             logging.debug(f'Trying Connection : {i}...')
             sleep(3)
+            write_time()
             state,_,_ = status()
         else:
             retstatus = status()
@@ -117,6 +133,7 @@ def connect(serverid=947373):
                 os.remove('CONN.LOCK')
             except:
                 pass
+            write_time()
             return retstatus
     
     retstatus = status()
@@ -126,16 +143,58 @@ def connect(serverid=947373):
         os.remove('CONN.LOCK')
     except:
         pass
-
+    write_time()
     return retstatus
 
 
+
+def write_time():
+    with open("LASTRUN.txt",'w') as f:
+        f.write(str(time.time()))
+
+def recent_run(time_limit=10):
+    current_time = time.time()
+    with open('LASTRUN.txt','r') as f:
+        last_time_run = float(f.readline())
+        difference_in_time = current_time -last_time_run
+        total_time = int(difference_in_time)
+        if total_time > time_limit:
+            return False
+        else:
+            logging.debug(f"Recent Run last run {total_time}s ago , Threshold time {time_limit}s")
+            return True
 
 def disconnect():
     subprocess.Popen('nordvpn -d',stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     retstatus = status()
     logging.debug(retstatus)
     return retstatus
-    
+
+def scrapy_call(response,statuscodes = None,run_time_limit=10,OVER_RIDE_TIME=False):
+    response_code = response.status_code
+    if response_code in statuscodes:
+        logging.debug(f"Bad response :{response_code}")
+        
+        if os.path.exists('BLOCKED.txt'):
+            logging.debug("Bocked file already exists , skipping IP Change")
+            time.sleep(10)
+            return("BLOCKEDFILE","BLOCKEDFILE","BLOCKEDFILE")
+
+        else:
+            with open('BLOCKED.txt' ,'w') as f:
+                f.write('BLOCKED')
+                logging.debug("Calling connect method of Nord IP Changer")
+                status = connect(run_time_limit=run_time_limit,OVER_RIDE_TIME=False)
+                return status
+    else:
+        try:
+            os.remove('BLOCKED.txt')
+        except Exception as error:
+            logging.debug(error)
+        return("GOODREQ","GOODREQ","GOODREQ")
+
+
 if __name__ == "__main__":
-    print(connect())
+    import requests
+    rs = requests.get("https://www.yelp.com/findfriends")
+    print(scrapy_call(run_time_limit=3000,OVER_RIDE_TIME=False,response=rs,statuscodes=[404]))
