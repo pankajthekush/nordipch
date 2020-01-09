@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="nordipch",
-    version="0.0.4",
+    version="0.0.5",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     description="A Package to change NordVPN servers",
