@@ -91,7 +91,6 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False):
 
 
     is_recent_run = recent_run(run_time_limit)
-
     #If run recently , then do  return and exit
     if is_recent_run and OVER_RIDE_TIME == False:
         return ("RECENT","RECENT","RECENT") 
@@ -104,10 +103,10 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False):
 
     with open("CONN.LOCK",'w') as f:
         f.write("CONNINPROGRESS")
-
     #Disconnect First
     logging.debug("Disconnecting..")
     subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+
     #wait 5 Seconds for disconnection
     time.sleep(5)
     logging.debug("Start Connect..")
@@ -153,7 +152,12 @@ def write_time():
         f.write(str(time.time()))
 
 def recent_run(time_limit=10):
+
     current_time = time.time()
+
+    if not os.path.exists('LASTRUN.txt'):
+        write_time()
+
     with open('LASTRUN.txt','r') as f:
         last_time_run = float(f.readline())
         difference_in_time = current_time -last_time_run
@@ -175,16 +179,17 @@ def scrapy_call(response,statuscodes = None,run_time_limit=10,OVER_RIDE_TIME=Fal
     if response_code in statuscodes:
         logging.debug(f"Bad response :{response_code}")
         
-        if os.path.exists('BLOCKED.txt'):
-            logging.debug("Bocked file already exists , skipping IP Change")
+        if os.path.exists('noBLOCKED.txt'):
+            logging.debug("Blocked file already exists , skipping IP Change")
             time.sleep(10)
+            
             return("BLOCKEDFILE","BLOCKEDFILE","BLOCKEDFILE")
 
         else:
             with open('BLOCKED.txt' ,'w') as f:
                 f.write('BLOCKED')
                 logging.debug("Calling connect method of Nord IP Changer")
-                status = connect(run_time_limit=run_time_limit,OVER_RIDE_TIME=False)
+                status = connect()
                 return status
     else:
         try:
@@ -197,4 +202,4 @@ def scrapy_call(response,statuscodes = None,run_time_limit=10,OVER_RIDE_TIME=Fal
 if __name__ == "__main__":
     import requests
     rs = requests.get("https://www.yelp.com/findfriends")
-    print(scrapy_call(run_time_limit=3000,OVER_RIDE_TIME=False,response=rs,statuscodes=[404]))
+    print(scrapy_call(run_time_limit=3000,OVER_RIDE_TIME=False,response=rs,statuscodes=[200]))
