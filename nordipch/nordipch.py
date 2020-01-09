@@ -171,7 +171,7 @@ def disconnect():
     return retstatus
 
 def scrapy_call(response,statuscodes = None,run_time_limit=10,OVER_RIDE_TIME=False):
-    response_code = response.status_code
+    response_code = response.status
     if response_code in statuscodes:
         logging.debug(f"Bad response :{response_code}")
         
