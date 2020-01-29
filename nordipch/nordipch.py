@@ -7,6 +7,12 @@ import subprocess
 import logging
 import os
 import time
+import csv
+import requests
+
+current_path = os.path.dirname(os.path.realpath(__file__))
+last_run_file = os.path.join(current_path,'LASTRUN.txt')
+block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
 
 logging.basicConfig(filename='nordipch.log', level=logging.DEBUG,
                     format='%(asctime)s:%(levelname)s:%(message)s:%(lineno)d')
@@ -56,18 +62,19 @@ def  get_current_ip():
                 return error
     
     last_digit=  int(current_api_text[-1:])
+    current_ip = current_api_text
     if last_digit == 0:
         last_tow_digit = int(current_api_text[-2:])
         last_digit = str(int(last_tow_digit)-1)
         v_ip = current_api_text[:-2] + last_digit
         logging.debug(f"Current IP : {v_ip}")
-        return v_ip
+        return [v_ip,current_ip]
 
     else:
         last_digit = str(int(last_digit-1))
         v_ip = current_api_text[:-1] + last_digit
         logging.debug(f"Current IP : {v_ip}")
-        return v_ip
+        return [v_ip,current_ip]
 
 
 
@@ -80,15 +87,14 @@ def status():
     id = None
     for ip_data in nord_ip_table:
         ip_address = ip_data['ip_address'].strip()
-        if v_ip == ip_address:
+        if ip_address in v_ip:
             id = ip_data['id']
-            logging.debug(f"CONNECTED, {v_ip},{id}")
-            return "CONNECTED", v_ip,id
-    logging.debug(f"DISCONNECTED, {v_ip},{id}")
-    return "DISCONNECTED" , v_ip,id
+            logging.debug(f"CONNECTED, {ip_address},{id}")
+            return "CONNECTED", ip_address,id
+    logging.debug(f"DISCONNECTED, {ip_address},{id}")
+    return "DISCONNECTED" , ip_address,id
 
-def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False):
-
+def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = 'ips.csv'):
 
     is_recent_run = recent_run(run_time_limit)
     #If run recently , then do  return and exit
@@ -110,6 +116,7 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False):
     #wait 5 Seconds for disconnection
     time.sleep(5)
     logging.debug("Start Connect..")
+    serverid = return_csv_line(ip_file)
     win_cmd = f'nordvpn -c -i {serverid}'
     subprocess.Popen(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     #Wait till connected
@@ -148,17 +155,17 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False):
 
 
 def write_time():
-    with open("LASTRUN.txt",'w') as f:
+    with open(last_run_file,'w') as f:
         f.write(str(time.time()))
 
 def recent_run(time_limit=10):
 
     current_time = time.time()
 
-    if not os.path.exists('LASTRUN.txt'):
+    if not os.path.exists(last_run_file):
         write_time()
 
-    with open('LASTRUN.txt','r') as f:
+    with open(last_run_file,'r') as f:
         last_time_run = float(f.readline())
         difference_in_time = current_time -last_time_run
         total_time = int(difference_in_time)
@@ -174,32 +181,85 @@ def disconnect():
     logging.debug(retstatus)
     return retstatus
 
-def scrapy_call(response,statuscodes = None,run_time_limit=10,OVER_RIDE_TIME=False):
+def wait_till_blocked(url,good_url = [200],run_time_limit=10,ip_file='ips.csv'):
+
+    while os.path.exists(block_file):
+        logging.debug("Block File Exists, Waiting")
+        sleep(3)
+
+    is_blocked = True
+    r = requests.get(url)
+    s_code = r.status_code
+    if s_code in good_url:
+        is_blocked = False
+
+    re_try_count = 0
+    while (is_blocked):
+        r = requests.get(url)
+        s_code = r.status_code
+        if s_code in good_url:
+            is_blocked = False
+            try:
+                os.remove(block_file)
+            except Exception as e:
+                logging.debug(str(e))
+        else:
+            b_file = open(block_file ,'w')
+            b_file.close()
+            connect(run_time_limit=run_time_limit,ip_file=ip_file)
+        time.sleep(1)
+
+
+
+
+def scrapy_call(response,ip_file='ips.csv',statuscodes = None,run_time_limit=10,OVER_RIDE_TIME=False,):
     response_code = response.status
     if response_code in statuscodes:
         logging.debug(f"Bad response :{response_code}")
         
-        if os.path.exists('noBLOCKED.txt'):
+        if os.path.exists(block_file):
             logging.debug("Blocked file already exists , skipping IP Change")
             time.sleep(10)
             
             return("BLOCKEDFILE","BLOCKEDFILE","BLOCKEDFILE")
 
         else:
-            with open('BLOCKED.txt' ,'w') as f:
+            with open(block_file ,'w') as f:
                 f.write('BLOCKED')
                 logging.debug("Calling connect method of Nord IP Changer")
-                status = connect()
+                status = connect(run_time_limit=run_time_limit,ip_file=ip_file)
                 return status
     else:
         try:
-            os.remove('BLOCKED.txt')
+            os.remove(block_file)
         except Exception as error:
             logging.debug(error)
         return("GOODREQ","GOODREQ","GOODREQ")
 
+def return_csv_line(in_input_file='ips.csv'):
+   
+    f =  open(in_input_file,'r',encoding='utf-8-sig',newline='')
+    csvfile = csv.DictReader(f)
+    link = ''
+    lidata = list()
+
+    for row in csvfile:
+        status = row['status']
+        if status == 'DO' and link == '':
+            row['status'] = 'COMPLETE'
+            link = row['id']
+        lidata.append(row)
+    f.close()
+    
+    with open(in_input_file,'w',newline='',encoding='utf8') as f:
+        dictcwriter = csv.DictWriter(f,lidata[0].keys())
+        dictcwriter.writeheader()
+        dictcwriter.writerows(lidata)
+    return link
+
 
 if __name__ == "__main__":
     import requests
-    rs = requests.get("https://www.yelp.com/findfriends")
-    print(scrapy_call(run_time_limit=3000,OVER_RIDE_TIME=False,response=rs,statuscodes=[200]))
+    #rs = requests.get("https://www.yelp.com/findfriends")
+    #print(scrapy_call(run_time_limit=3000,OVER_RIDE_TIME=False,response=rs,statuscodes=[200]))
+    print(return_csv_line('ips.csv'))
