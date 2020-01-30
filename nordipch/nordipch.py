@@ -76,8 +76,6 @@ def  get_current_ip():
         logging.debug(f"Current IP : {v_ip}")
         return [v_ip,current_ip]
 
-
-
 def status():
     nord_api_text = return_nord_json()
     if isinstance(nord_api_text,Exception):
@@ -152,8 +150,6 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = '
     write_time()
     return retstatus
 
-
-
 def write_time():
     with open(last_run_file,'w') as f:
         f.write(str(time.time()))
@@ -181,54 +177,55 @@ def disconnect():
     logging.debug(retstatus)
     return retstatus
 
-def wait_till_blocked(url,good_url = [200],run_time_limit=10,ip_file='ips.csv'):
+def send_response():
+    while (os.path.exists('BLOCKED.txt')):
+            logging.debug("Waiting IP to be changed")
 
-    ip_changed_for_this_url = False
-    while (os.path.exists(block_file)):
-        if ip_changed_for_this_url == True:
-            break
+def scrapy_call(response,ip_file='ips.csv',run_time_limit=10,bad_response = [404,503]):
+    
+    if os.path.exists('RESPONSE.LOCK') and os.path.exists('BLOCKED.txt'):
+        print("COnnection is progress , skipping")
+        input("response lock")
+        sleep(10)
+        return response
+    
+    if response.status in bad_response:
+        r_file = open('RESPONSE.LOCK' ,'w')
+        r_file.close()
 
-        input("reached ti ip ch")
-        r = requests.get(url)
-        s_code = r.status_code
-        if s_code in good_url:
+        is_changed_for_this_link = is_already_done(response.url,response.status)
+
+        b_file = open('BLOCKED.txt' ,'w')
+        b_file.close()
+        if not is_changed_for_this_link:
+            connect(run_time_limit=2,ip_file='ips.csv')
+    
             try:
-                os.remove(block_file)
-            except Exception as e:
-                logging.debug(str(e))
-            break
+                os.remove('BLOCKED.txt')
+            except Exception:
+                pass
+                
         else:
-            connect(run_time_limit=run_time_limit,ip_file=ip_file)
-            ip_changed_for_this_url= True
-            time.sleep(10)
-        time.sleep(1)
+            try:
+                os.remove('BLOCKED.txt')
+            except Exception:
+                pass
 
-
-
-
-def scrapy_call(response,ip_file='ips.csv',statuscodes = None,run_time_limit=10,OVER_RIDE_TIME=False,):
-    response_code = response.status
-    if response_code in statuscodes:
-        logging.debug(f"Bad response :{response_code}")
-        
-        if os.path.exists(block_file):
-            logging.debug("Blocked file already exists , skipping IP Change")
-            time.sleep(10)
-            
-            return("BLOCKEDFILE","BLOCKEDFILE","BLOCKEDFILE")
-
-        else:
-            with open(block_file ,'w') as f:
-                f.write('BLOCKED')
-                logging.debug("Calling connect method of Nord IP Changer")
-                status = connect(run_time_limit=run_time_limit,ip_file=ip_file)
-                return status
     else:
         try:
-            os.remove(block_file)
-        except Exception as error:
-            logging.debug(error)
-        return("GOODREQ","GOODREQ","GOODREQ")
+            os.remove('BLOCKED.txt')
+        except Exception:
+            pass
+        
+    with open('ip_url.csv',mode='a',encoding='utf-8') as iplog:
+        iplog.write(f'{response.url},{response.status}\n')
+    
+    try:
+        os.remove('RESPONSE.LOCK')
+    except Exception:
+        pass
+    
+    return response
 
 def return_csv_line(in_input_file='ips.csv'):
    
@@ -250,6 +247,24 @@ def return_csv_line(in_input_file='ips.csv'):
         dictcwriter.writeheader()
         dictcwriter.writerows(lidata)
     return link
+
+
+def is_already_done(in_link,in_status):
+
+    if not os.path.exists('ip_url.csv'):
+        return False
+
+    in_link,in_status = str(in_link), str(in_status)
+    with open('ip_url.csv',encoding='utf-8',newline='') as f:
+        csvfile = csv.reader(f)
+
+        for row in csvfile:
+            link = row[0]
+            status = row[1]
+            if link == in_link and status == in_status:
+                return True
+           
+    return False
 
 
 if __name__ == "__main__":
