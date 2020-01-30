@@ -183,30 +183,24 @@ def disconnect():
 
 def wait_till_blocked(url,good_url = [200],run_time_limit=10,ip_file='ips.csv'):
 
-    while os.path.exists(block_file):
-        logging.debug("Block File Exists, Waiting")
-        sleep(3)
+    ip_changed_for_this_url = False
+    while (os.path.exists(block_file)):
+        if ip_changed_for_this_url == True:
+            break
 
-    is_blocked = True
-    r = requests.get(url)
-    s_code = r.status_code
-    if s_code in good_url:
-        is_blocked = False
-
-    re_try_count = 0
-    while (is_blocked):
+        input("reached ti ip ch")
         r = requests.get(url)
         s_code = r.status_code
         if s_code in good_url:
-            is_blocked = False
             try:
                 os.remove(block_file)
             except Exception as e:
                 logging.debug(str(e))
+            break
         else:
-            b_file = open(block_file ,'w')
-            b_file.close()
             connect(run_time_limit=run_time_limit,ip_file=ip_file)
+            ip_changed_for_this_url= True
+            time.sleep(10)
         time.sleep(1)
 
 
