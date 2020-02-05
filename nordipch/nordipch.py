@@ -267,6 +267,20 @@ def is_already_done(in_link,in_status):
     return False
 
 
+def check_file_connect(filename='NEEDCHANGE.LOCK'):
+    while True:
+        if os.path.exists(filename):
+            logging.debug("Will Change the IP")
+            connect(run_time_limit=2,ip_file='ips.csv')
+            os.remove(filename)
+            logging.debug("IP is Changed")
+            
+        else:
+            logging.debug("IP will not be changed")
+            sleep(2)
+
+
+
 if __name__ == "__main__":
     import requests
     #rs = requests.get("https://www.yelp.com/findfriends")
