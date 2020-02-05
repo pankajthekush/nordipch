@@ -177,8 +177,8 @@ def disconnect():
     logging.debug(retstatus)
     return retstatus
 
-def send_response():
-    while (os.path.exists('BLOCKED.txt')):
+def wait_send_response(filename):
+    while (os.path.exists(filename)):
             logging.debug("Waiting IP to be changed")
 
 def scrapy_call(response,ip_file='ips.csv',run_time_limit=10,bad_response = [404,503]):
