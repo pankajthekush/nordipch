@@ -284,7 +284,7 @@ def create_lock_file(filename='NEEDCHANGE.LOCK'):
     if os.path.exists(filename):
         pass
     else:
-        f = open(filename)
+        f = open(filename,'w')
         f.close()
 
 
