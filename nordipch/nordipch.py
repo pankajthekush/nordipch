@@ -177,7 +177,7 @@ def disconnect():
     logging.debug(retstatus)
     return retstatus
 
-def wait_send_response(filename):
+def wait_send_response(filename='NEEDCHANGE.LOCK'):
     while (os.path.exists(filename)):
             logging.debug("Waiting IP to be changed")
 
@@ -278,6 +278,14 @@ def check_file_connect(filename='NEEDCHANGE.LOCK'):
         else:
             logging.debug("IP will not be changed")
             sleep(2)
+
+
+def create_lock_file(filename='NEEDCHANGE.LOCK'):
+    if os.path.exists(filename):
+        pass
+    else:
+        f = open(filename)
+        f.close()
 
 
 
