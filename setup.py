@@ -5,9 +5,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="nordipch",
-    version="0.0.5",
+    version="0.1",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
+    entry_points ={'console_scripts': ['nchange = nordipch.nordipch:check_file_connect']},
     description="A Package to change NordVPN servers",
     long_description=long_description,
     long_description_content_type="text/markdown",

@@ -271,9 +271,13 @@ def check_file_connect(filename='NEEDCHANGE.LOCK'):
     while True:
         if os.path.exists(filename):
             logging.debug("Will Change the IP")
-            connect(run_time_limit=2,ip_file='ips.csv')
-            os.remove(filename)
+            connect(run_time_limit=10,ip_file='ips.csv')
+            try:
+                os.remove(filename)
+            except:
+                pass
             logging.debug("IP is Changed")
+            sleep(5)
             
         else:
             logging.debug("IP will not be changed")
@@ -281,12 +285,13 @@ def check_file_connect(filename='NEEDCHANGE.LOCK'):
 
 
 def create_lock_file(filename='NEEDCHANGE.LOCK'):
+
     if os.path.exists(filename):
         pass
     else:
         f = open(filename,'w')
         f.close()
-
+    
 
 
 if __name__ == "__main__":
