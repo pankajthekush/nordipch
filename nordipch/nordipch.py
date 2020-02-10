@@ -114,7 +114,10 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = '
     #wait 5 Seconds for disconnection
     time.sleep(5)
     logging.debug("Start Connect..")
-    serverid = return_csv_line(ip_file)
+    if serverid == '':
+        serverid = return_csv_line(ip_file)
+    else:
+        pass
     win_cmd = f'nordvpn -c -i {serverid}'
     subprocess.Popen(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     #Wait till connected
