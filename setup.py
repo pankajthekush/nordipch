@@ -16,7 +16,6 @@ setuptools.setup(
     description="A Package to change NordVPN servers",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    data_files = [(os.path.join(current_path, 'jslit/about'), glob('nordipch/*.json'))],
     url="https://github.com/pankajthekush/nordipch",
     packages=['nordipch'],
     classifiers=[
@@ -24,5 +23,6 @@ setuptools.setup(
         "Operating System :: Windows 10",
     ],
     python_requires='>=3.6',
-    install_requires=['requests>=2.22.0']
+    install_requires=['requests>=2.22.0'],
+    data_files = [(os.path.join(current_path, 'jslit/about'), glob('nordipch/*.json'))]
 )
