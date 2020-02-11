@@ -1,11 +1,17 @@
 import setuptools
+import os
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+current_path = os.path.dirname(os.path.realpath(__file__))
+
+from glob import glob
+
 setuptools.setup(
     name="nordipch",
-    version="0.1",
+    version="0.2",
+    data_files = [current_path,'nordip.json' ],
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     entry_points ={'console_scripts': ['nchange = nordipch.nordipch:check_file_connect']},

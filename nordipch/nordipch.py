@@ -26,23 +26,10 @@ nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
 
 def return_nord_json():
-    nord_api_text = None
-    retry_count = 1
-    max_retry_count = 30
-
-    while nord_api_text is None and retry_count < max_retry_count:
-        try:
-            nord_api_text = requests.get(nord_api).text
-        except Exception as error:
-            sleep(3)
-            logging.debug(f"{error}, Retrying : {retry_count}...")
-            retry_count += 1
-            if retry_count >= max_retry_count:
-                logging.debug(error)
-                logging.debug("Nord API JSON request : Fail")
-                return error
-    logging.debug("Nord API JSON request : Success")
-    return nord_api_text
+    f = open(os.path.join(current_path,'nordip.json'),'rb')
+    f_content = f.read()
+    f_content = f_content.decode("utf-8")
+    return f_content
     
 def  get_current_ip():
     current_api_text = None
@@ -75,16 +62,12 @@ def  get_current_ip():
     prev_ip = base_ip + "."+ str(suffix_pred)
     
 
-    return (f'{prev_ip},{current_ip},{next_ip}')
+    return [prev_ip,current_ip,next_ip]
 
    
-def status(nord_api_text=None):
+def status():
 
-    if nord_api_text is None:
-        nord_api_text = return_nord_json()
-    else:
-        pass
-
+    nord_api_text = return_nord_json()
     if isinstance(nord_api_text,Exception):
         return nord_api_text
     
@@ -92,11 +75,21 @@ def status(nord_api_text=None):
     v_ip = get_current_ip()
     id = None
     for ip_data in nord_ip_table:
-        ip_address = ip_data['ip_address'].strip()
+        
+        ip_address = str(ip_data['ip_address'].strip())
         if ip_address in v_ip:
             id = ip_data['id']
             logging.debug(f"CONNECTED, {ip_address},{id}")
             return "CONNECTED", ip_address,id
+        else:
+            for ip in v_ip:
+                id = ip_data['id']
+                first_suffix_ip = ip.split(".")[:-1]
+                base_ip = ".".join(ip for ip in first_suffix_ip)
+                if base_ip in ip_address:
+                    return "CONNECTED", ip_address,id
+
+
     logging.debug(f"DISCONNECTED, {ip_address},{id}")
     return "DISCONNECTED" , ip_address,id
 
@@ -133,9 +126,13 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = '
     win_cmd = f'nordvpn -c -i {serverid}'
     subprocess.Popen(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     #Wait till connected
+    state = None
+    nid = None
+    nip = None
+
     for i in range(10):
         try:
-            state,_,_ = status(nord_api_text=nord_api_text)
+            state,nip,nid = status()
         except TypeError as error:
             logging.debug("Could Not Connect , re-tries exceeded {}".format(error))
             return ("ERROR",'ERROR','ERROR')
@@ -144,16 +141,17 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = '
             logging.debug(f'Trying Connection : {i}...')
             sleep(3)
             write_time()
-            state,_,_ = status(nord_api_text=nord_api_text)
+            state,nid,nip = status()
         else:
-            retstatus = status(nord_api_text=nord_api_text)
-            logging.debug(retstatus)
+        
+            #retstatus = status()
+      
             try:
                 os.remove('CONN.LOCK')
             except:
                 pass
             write_time()
-            return retstatus
+            return (state,nid,nip)
     
     retstatus = status()
     logging.debug(retstatus)
@@ -313,5 +311,6 @@ if __name__ == "__main__":
     import requests
     #rs = requests.get("https://www.yelp.com/findfriends")
     #print(scrapy_call(run_time_limit=3000,OVER_RIDE_TIME=False,response=rs,statuscodes=[200]))
-    connect(940187)
+    print(connect(954735))
+    #print(connect(590772))
     
