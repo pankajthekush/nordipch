@@ -61,21 +61,23 @@ def  get_current_ip():
                 logging.debug(error)
                 return error
     
-    last_digit=  int(current_api_text[-1:])
+  
     current_ip = current_api_text
-    if last_digit == 0:
-        last_tow_digit = int(current_api_text[-2:])
-        last_digit = str(int(last_tow_digit)-1)
-        v_ip = current_api_text[:-2] + last_digit
-        logging.debug(f"Current IP : {v_ip}")
-        return [v_ip,current_ip]
+    
+    last_suffix = current_ip.split(".")[-1:][0]
+    first_suffix = current_ip.split(".")[:-1]
+    
+    suffix_succ = int(last_suffix)+1
+    suffix_pred = int(last_suffix) - 1
 
-    else:
-        last_digit = str(int(last_digit-1))
-        v_ip = current_api_text[:-1] + last_digit
-        logging.debug(f"Current IP : {v_ip}")
-        return [v_ip,current_ip]
+    base_ip = ".".join(ip for ip in first_suffix)
+    next_ip = base_ip +"." + str(suffix_succ)
+    prev_ip = base_ip + "."+ str(suffix_pred)
+    
 
+    return (f'{prev_ip},{current_ip},{next_ip}')
+
+   
 def status():
     nord_api_text = return_nord_json()
     if isinstance(nord_api_text,Exception):
@@ -102,7 +104,7 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = '
         pass
 
     if os.path.exists('CONN.LOCK'):
-        logging.debug("Connection still in progress , Aborting...")
+        logging.debug("Connection still in progress , Aborting..., You may want to delete CONN.LOCK if needed")
         return ("INPROGRESS","INPROGRESS","INPROGRESS")
 
     with open("CONN.LOCK",'w') as f:
@@ -301,4 +303,5 @@ if __name__ == "__main__":
     import requests
     #rs = requests.get("https://www.yelp.com/findfriends")
     #print(scrapy_call(run_time_limit=3000,OVER_RIDE_TIME=False,response=rs,statuscodes=[200]))
-    print(return_csv_line('ips.csv'))
+    #connect(947289)
+    print(get_current_ip())
