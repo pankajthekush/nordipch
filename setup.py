@@ -10,7 +10,7 @@ from glob import glob
 setuptools.setup(
     name="nordipch",
     version="0.3",
-    data_files = [(os.path.join(current_path, 'ndr'), glob('*.json'))],
+    data_files = [(os.path.join(current_path, 'ndr'), glob('nordipch/*.json'))],
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     entry_points ={'console_scripts': ['nchange = nordipch.nordipch:check_file_connect']},
