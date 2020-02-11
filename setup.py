@@ -5,12 +5,12 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 current_path = os.path.dirname(os.path.realpath(__file__))
-
+print(current_path)
 from glob import glob
-
 setuptools.setup(
     name="nordipch",
     version="0.2",
+    data_files = [(os.path.join(current_path, ''), glob('*.js'))],
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     entry_points ={'console_scripts': ['nchange = nordipch.nordipch:check_file_connect']},
