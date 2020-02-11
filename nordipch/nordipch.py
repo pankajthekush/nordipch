@@ -78,10 +78,16 @@ def  get_current_ip():
     return (f'{prev_ip},{current_ip},{next_ip}')
 
    
-def status():
-    nord_api_text = return_nord_json()
+def status(nord_api_text=None):
+
+    if nord_api_text is None:
+        nord_api_text = return_nord_json()
+    else:
+        pass
+
     if isinstance(nord_api_text,Exception):
         return nord_api_text
+    
     nord_ip_table = json.loads(nord_api_text)
     v_ip = get_current_ip()
     id = None
@@ -95,7 +101,7 @@ def status():
     return "DISCONNECTED" , ip_address,id
 
 def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = 'ips.csv'):
-
+    
     is_recent_run = recent_run(run_time_limit)
     #If run recently , then do  return and exit
     if is_recent_run and OVER_RIDE_TIME == False:
@@ -110,6 +116,10 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = '
     with open("CONN.LOCK",'w') as f:
         f.write("CONNINPROGRESS")
     #Disconnect First
+    nord_api_text = return_nord_json()
+    if isinstance(nord_api_text,Exception):
+        return 'ERROR','ERROR','ERROR'
+
     logging.debug("Disconnecting..")
     subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
 
@@ -125,7 +135,7 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = '
     #Wait till connected
     for i in range(10):
         try:
-            state,_,_ = status()
+            state,_,_ = status(nord_api_text=nord_api_text)
         except TypeError as error:
             logging.debug("Could Not Connect , re-tries exceeded {}".format(error))
             return ("ERROR",'ERROR','ERROR')
@@ -134,9 +144,9 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = '
             logging.debug(f'Trying Connection : {i}...')
             sleep(3)
             write_time()
-            state,_,_ = status()
+            state,_,_ = status(nord_api_text=nord_api_text)
         else:
-            retstatus = status()
+            retstatus = status(nord_api_text=nord_api_text)
             logging.debug(retstatus)
             try:
                 os.remove('CONN.LOCK')
@@ -303,5 +313,5 @@ if __name__ == "__main__":
     import requests
     #rs = requests.get("https://www.yelp.com/findfriends")
     #print(scrapy_call(run_time_limit=3000,OVER_RIDE_TIME=False,response=rs,statuscodes=[200]))
-    #connect(947289)
-    print(get_current_ip())
+    connect(940187)
+    
