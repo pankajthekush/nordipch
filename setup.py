@@ -24,5 +24,6 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     install_requires=['requests>=2.22.0'],
+    include_package_data = True,
     data_files = [(os.path.join(current_path, 'jslit/about'), glob('nordipch/*.json'))]
 )
