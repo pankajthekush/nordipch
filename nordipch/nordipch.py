@@ -10,6 +10,14 @@ import time
 import csv
 import requests
 
+import inspect
+
+
+cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
+if cmd_folder not in sys.path:
+    sys.path.insert(0, cmd_folder)
+
+from norddb import return_nord_id
 current_path = os.path.dirname(os.path.realpath(__file__))
 last_run_file = os.path.join(current_path,'LASTRUN.txt')
 block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
@@ -93,7 +101,7 @@ def status():
     logging.debug(f"DISCONNECTED, {ip_address},{id}")
     return "DISCONNECTED" , ip_address,id
 
-def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = 'ips.csv'):
+def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_name=None,lang=None,region=None,ignore_current_conn=False):
     
     is_recent_run = recent_run(run_time_limit)
     #If run recently , then do  return and exit
@@ -102,7 +110,7 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = '
     else:
         pass
 
-    if os.path.exists('CONN.LOCK'):
+    if os.path.exists('CONN.LOCK') and ignore_current_conn == False:
         logging.debug("Connection still in progress , Aborting..., You may want to delete CONN.LOCK if needed")
         return ("INPROGRESS","INPROGRESS","INPROGRESS")
 
@@ -113,18 +121,17 @@ def connect(serverid=947373,run_time_limit=10,OVER_RIDE_TIME = False,ip_file = '
     if isinstance(nord_api_text,Exception):
         return 'ERROR','ERROR','ERROR'
 
-    logging.debug("Disconnecting..")
-    subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
-
-    #wait 5 Seconds for disconnection
-    time.sleep(5)
     logging.debug("Start Connect..")
-    if serverid == '':
-        serverid = return_csv_line(ip_file)
+    if serverid is None:
+        serverid = return_nord_id(nord_table_name,lang=lang,region=region)
     else:
         pass
+
+    logging.debug("Disconnecting..")
+    subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True) 
+    sleep(2)
     win_cmd = f'nordvpn -c -i {serverid}'
-    subprocess.Popen(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+    subprocess.run(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     #Wait till connected
     state = None
     nid = None
@@ -194,72 +201,7 @@ def wait_send_response(filename='NEEDCHANGE.LOCK'):
     while (os.path.exists(filename)):
             logging.debug("Waiting IP to be changed")
 
-def scrapy_call(response,ip_file='ips.csv',run_time_limit=10,bad_response = [404,503]):
-    
-    if os.path.exists('RESPONSE.LOCK') and os.path.exists('BLOCKED.txt'):
-        print("COnnection is progress , skipping")
-        input("response lock")
-        sleep(10)
-        return response
-    
-    if response.status in bad_response:
-        r_file = open('RESPONSE.LOCK' ,'w')
-        r_file.close()
 
-        is_changed_for_this_link = is_already_done(response.url,response.status)
-
-        b_file = open('BLOCKED.txt' ,'w')
-        b_file.close()
-        if not is_changed_for_this_link:
-            connect(run_time_limit=2,ip_file='ips.csv')
-    
-            try:
-                os.remove('BLOCKED.txt')
-            except Exception:
-                pass
-                
-        else:
-            try:
-                os.remove('BLOCKED.txt')
-            except Exception:
-                pass
-
-    else:
-        try:
-            os.remove('BLOCKED.txt')
-        except Exception:
-            pass
-        
-    with open('ip_url.csv',mode='a',encoding='utf-8') as iplog:
-        iplog.write(f'{response.url},{response.status}\n')
-    
-    try:
-        os.remove('RESPONSE.LOCK')
-    except Exception:
-        pass
-    
-    return response
-
-def return_csv_line(in_input_file='ips.csv'):
-   
-    f =  open(in_input_file,'r',encoding='utf-8-sig',newline='')
-    csvfile = csv.DictReader(f)
-    link = ''
-    lidata = list()
-
-    for row in csvfile:
-        status = row['status']
-        if status == 'DO' and link == '':
-            row['status'] = 'COMPLETE'
-            link = row['id']
-        lidata.append(row)
-    f.close()
-    
-    with open(in_input_file,'w',newline='',encoding='utf8') as f:
-        dictcwriter = csv.DictWriter(f,lidata[0].keys())
-        dictcwriter.writeheader()
-        dictcwriter.writerows(lidata)
-    return link
 
 
 def is_already_done(in_link,in_status):
@@ -284,7 +226,7 @@ def check_file_connect(filename='NEEDCHANGE.LOCK'):
     while True:
         if os.path.exists(filename):
             logging.debug("Will Change the IP")
-            connect(run_time_limit=10,ip_file='ips.csv')
+            connect(run_time_limit=10)
             try:
                 os.remove(filename)
             except:
@@ -306,11 +248,6 @@ def create_lock_file(filename='NEEDCHANGE.LOCK'):
         f.close()
     
 
-
 if __name__ == "__main__":
-    import requests
-    #rs = requests.get("https://www.yelp.com/findfriends")
-    #print(scrapy_call(run_time_limit=3000,OVER_RIDE_TIME=False,response=rs,statuscodes=[200]))
-    print(connect(954735))
-    #print(connect(590772))
+    pass
     
