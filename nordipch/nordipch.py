@@ -123,7 +123,7 @@ def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_na
 
     logging.debug("Start Connect..")
     if serverid is None and not nord_table_name is None :
-        serverid = return_nord_id(nord_table_name,lang=lang,region=region)
+        serverid = return_nord_id(nord_table_name= nord_table_name,lang=lang,region=region)
     elif not serverid is None and nord_table_name is None:
         pass
     else:
