@@ -122,15 +122,23 @@ def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_na
         return 'ERROR','ERROR','ERROR'
 
     logging.debug("Start Connect..")
-    if serverid is None:
+    if serverid is None and not nord_table_name is None :
         serverid = return_nord_id(nord_table_name,lang=lang,region=region)
+    elif not serverid is None and nord_table_name is None:
+        pass
     else:
         pass
 
     logging.debug("Disconnecting..")
     subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True) 
     sleep(2)
-    win_cmd = f'nordvpn -c -i {serverid}'
+
+    if not serverid is None:
+        win_cmd = f'nordvpn -c -i {serverid}'
+    else:
+        #if server Id not found , get the best server and connect
+        win_cmd = f'nordvpn -c'
+
     subprocess.run(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     #Wait till connected
     state = None
@@ -249,5 +257,5 @@ def create_lock_file(filename='NEEDCHANGE.LOCK'):
     
 
 if __name__ == "__main__":
-    pass
+    connect()
     
