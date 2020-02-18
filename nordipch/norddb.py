@@ -64,26 +64,52 @@ def return_db_conn():
             logging.debug(exception)        
         return conn
 
-def return_nord_id(nord_table_name=None,lang=None,region=None):
+def return_nord_id(nord_table_name=None,lang=None,region=None,keep_blockd=False):
     
     #BELOW IS VERY SHITTY CODE ,AND I KNOW PLEASE IMPORVE and notify me @pankajthekush@gmail.com if you could imporve it
-    if lang and not region:
+    if lang and not region and keep_blockd == False:
         qry_str = sql.SQL("select * from {} where lang={} order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(lang))
-    if not lang and region:
+    if not lang and region and keep_blockd == False:
         qry_str = sql.SQL("select * from {} where flag={} order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(region))
-    if lang and region:
+    if lang and region and keep_blockd == False:
         qry_str = sql.SQL("select * from {} where flag={} and lang = {} order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(region),sql.Literal(lang))
-    if not lang and not region:
+    if not lang and not region and keep_blockd == False:
         qry_str = sql.SQL("select * from {} order by random() limit 1").format(sql.Identifier(nord_table_name))
     
+    #keepbloced = true
+    if lang and not region and keep_blockd == True:
+        qry_str = sql.SQL("select * from {} where lang={} and isblocked = false order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(lang))
+    if not lang and region and keep_blockd == True:
+        qry_str = sql.SQL("select * from {} where flag={} and isblocked = false order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(region))
+    if lang and region and keep_blockd == True:
+        qry_str = sql.SQL("select * from {} where flag={}  and lang = {}  and isblocked = false order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(region),sql.Literal(lang))
+    if not lang and not region and keep_blockd == True:
+        qry_str = sql.SQL("select * from {} order by random() limit 1").format(sql.Identifier(nord_table_name))
+
+
+
     conn = return_db_conn()
     nord_id = ''
     cur = conn.cursor()
 
     cur.execute(qry_str,(lang))
+
+
     rows = cur.fetchall()
     for row in rows:
         nord_id = row[0]
+
+
+    if keep_blockd:
+        cur.execute(sql.SQL("update {} set isblocked = True where id = (%s)")
+                                .format(sql.Identifier(nord_table_name)),(int(nord_id),))
+        affected_row = cur.rowcount
+        print(affected_row)
+        conn.commit()
+    else:
+        pass
+        #do not update table
+    cur.close()
     conn.close() 
     return nord_id
 

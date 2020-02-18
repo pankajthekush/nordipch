@@ -9,9 +9,10 @@ import os
 import time
 import csv
 import requests
-
+import click
+from azwmail.azwmail import send_email2
 import inspect
-
+import glob
 
 cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
 if cmd_folder not in sys.path:
@@ -101,7 +102,7 @@ def status():
     logging.debug(f"DISCONNECTED, {ip_address},{id}")
     return "DISCONNECTED" , ip_address,id
 
-def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_name=None,lang=None,region=None,ignore_current_conn=False):
+def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_name=None,lang=None,region=None,ignore_current_conn=False,keep_blockd=False):
     
     is_recent_run = recent_run(run_time_limit)
     #If run recently , then do  return and exit
@@ -123,7 +124,7 @@ def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_na
 
     logging.debug("Start Connect..")
     if serverid is None and not nord_table_name is None :
-        serverid = return_nord_id(nord_table_name= nord_table_name,lang=lang,region=region)
+        serverid = return_nord_id(nord_table_name= nord_table_name,lang=lang,region=region,keep_blockd=keep_blockd)
     elif not serverid is None and nord_table_name is None:
         pass
     else:
@@ -256,6 +257,45 @@ def create_lock_file(filename='NEEDCHANGE.LOCK'):
         f.close()
     
 
+
+@click.command()
+@click.option('--max-robot',type=int,default=3)
+@click.option('--update-block',type=bool,default=False)
+
+def change_ip(max_robot,update_block):
+    robo_files = glob.glob(r'C:\temp\*.LOCK')
+    robot_count = len(robo_files)
+    
+    while(True):
+        logging.debug("Will not change the IP")
+        sleep(3)
+
+        if robot_count >= max_robot:
+            logging.debug("IP will bechanged")        
+            status = 'disconnected'
+            re_try_time = 0
+            while status != 'CONNECTED':
+                try:
+                    status,_,_ = connect(nord_table_name='tbl_nord_ip',lang='ENGLISH',ignore_current_conn=True,OVER_RIDE_TIME=True,keep_blockd=update_block)
+                except Exception:
+                    status = 'disconnected'
+                re_try_time += 1
+                if re_try_time >= 5:
+                    send_email2(send_to='pankaj.kushwaha@rho.ai',body='Coluld Not Changed Ip after 5 attempts',subject='Could not change IP')
+                    re_try_time = 0
+            logging.debug("Ip Has been changed")
+            
+            for file in robo_files:
+                os.remove(file)
+        
+        robo_files = glob.glob(r'C:\temp\*.LOCK')
+        robot_count = len(robo_files)
+    
+        robo_files = glob.glob(r'C:\temp\*.LOCK')
+        robot_count = len(robo_files)
+        
+
 if __name__ == "__main__":
-    connect()
+    #connect(ignore_current_conn=True,OVER_RIDE_TIME=True)
+    #connect(nord_table_name='tbl_nord_ip',lang='ENGLISH',ignore_current_conn=True,OVER_RIDE_TIME=True,keep_blockd=True)
     
