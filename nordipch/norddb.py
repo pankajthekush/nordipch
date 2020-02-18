@@ -3,7 +3,7 @@ import psycopg2
 from psycopg2 import sql
 import requests
 import json
-import logging
+
 import os
 
 import tkinter as tk
@@ -11,7 +11,7 @@ from tkinter import filedialog
 
 
 
-logging.basicConfig(level=logging.DEBUG,format='%(name)s - %(levelname)s - %(message)s')
+
 current_path = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -56,12 +56,12 @@ def return_db_conn():
             password=db_data['password']
             ApplicationName = db_data['ApplicationName']
         
-        logging.debug("Creating new connection")
+        #logging.debug("Creating new connection")
         conn = None
         try:
             conn = psycopg2.connect(f"dbname={dbname} user={user} host={host} password={password} application_name={ApplicationName}")
         except Exception as exception:
-            logging.debug(exception)        
+            print(exception)        
         return conn
 
 def return_nord_id(nord_table_name=None,lang=None,region=None,keep_blockd=False):
@@ -131,9 +131,9 @@ def update_nord_tbl(table_name = None):
         affected_row = curser.rowcount
         if affected_row >= 1:
             conn.commit()
-            logging.debug(f'Inserted {record_to_insert}')
+            print(f'Inserted {record_to_insert}')
         else:
-            logging.debug(f'{record_to_insert} : Already Exists')
+            print(f'{record_to_insert} : Already Exists')
     curser.close()
     conn.close()
 

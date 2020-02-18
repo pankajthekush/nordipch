@@ -4,7 +4,7 @@ import sys
 from time import sleep
 import ipaddress
 import subprocess
-import logging
+
 import os
 import time
 import csv
@@ -23,13 +23,6 @@ current_path = os.path.dirname(os.path.realpath(__file__))
 last_run_file = os.path.join(current_path,'LASTRUN.txt')
 block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
 
-logging.basicConfig(filename='nordipch.log', level=logging.DEBUG,
-                    format='%(asctime)s:%(levelname)s:%(message)s:%(lineno)d')
-console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s:%(lineno)d')
-console.setFormatter(formatter)
-logging.getLogger("").addHandler(console)
 
 nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
@@ -51,10 +44,10 @@ def  get_current_ip():
             ipaddress.ip_address(current_api_text)  #This validates the IP returned
         except Exception as error:
             sleep(3)
-            logging.debug(f"Error {error}.Retrying {retry_count}...")
+            print(f"Error {error}.Retrying {retry_count}...")
             retry_count += 1
             if retry_count >= max_retry_count:
-                logging.debug(error)
+                print(error)
                 return error
     
   
@@ -88,7 +81,7 @@ def status():
         ip_address = str(ip_data['ip_address'].strip())
         if ip_address in v_ip:
             id = ip_data['id']
-            logging.debug(f"CONNECTED, {ip_address},{id}")
+            print(f"CONNECTED, {ip_address},{id}")
             return "CONNECTED", ip_address,id
         else:
             for ip in v_ip:
@@ -99,7 +92,7 @@ def status():
                     return "CONNECTED", ip_address,id
 
 
-    logging.debug(f"DISCONNECTED, {ip_address},{id}")
+    print(f"DISCONNECTED, {ip_address},{id}")
     return "DISCONNECTED" , ip_address,id
 
 def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_name=None,lang=None,region=None,ignore_current_conn=False,keep_blockd=False):
@@ -112,7 +105,7 @@ def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_na
         pass
 
     if os.path.exists('CONN.LOCK') and ignore_current_conn == False:
-        logging.debug("Connection still in progress , Aborting..., You may want to delete CONN.LOCK if needed")
+        print("Connection still in progress , Aborting..., You may want to delete CONN.LOCK if needed")
         return ("INPROGRESS","INPROGRESS","INPROGRESS")
 
     with open("CONN.LOCK",'w') as f:
@@ -122,7 +115,7 @@ def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_na
     if isinstance(nord_api_text,Exception):
         return 'ERROR','ERROR','ERROR'
 
-    logging.debug("Start Connect..")
+    print("Start Connect..")
     if serverid is None and not nord_table_name is None :
         serverid = return_nord_id(nord_table_name= nord_table_name,lang=lang,region=region,keep_blockd=keep_blockd)
     elif not serverid is None and nord_table_name is None:
@@ -130,7 +123,7 @@ def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_na
     else:
         pass
 
-    logging.debug("Disconnecting..")
+    print("Disconnecting..")
     subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True) 
     sleep(2)
 
@@ -150,11 +143,11 @@ def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_na
         try:
             state,nip,nid = status()
         except TypeError as error:
-            logging.debug("Could Not Connect , re-tries exceeded {}".format(error))
+            print("Could Not Connect , re-tries exceeded {}".format(error))
             return ("ERROR",'ERROR','ERROR')
 
         if state == 'DISCONNECTED':
-            logging.debug(f'Trying Connection : {i}...')
+            print(f'Trying Connection : {i}...')
             sleep(3)
             write_time()
             state,nid,nip = status()
@@ -170,7 +163,7 @@ def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_na
             return (state,nid,nip)
     
     retstatus = status()
-    logging.debug(retstatus)
+    print(retstatus)
 
     try:
         os.remove('CONN.LOCK')
@@ -197,18 +190,18 @@ def recent_run(time_limit=10):
         if total_time > time_limit:
             return False
         else:
-            logging.debug(f"Recent Run last run {total_time}s ago , Threshold time {time_limit}s")
+            print(f"Recent Run last run {total_time}s ago , Threshold time {time_limit}s")
             return True
 
 def disconnect():
     subprocess.Popen('nordvpn -d',stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     retstatus = status()
-    logging.debug(retstatus)
+    print(retstatus)
     return retstatus
 
 def wait_send_response(filename='NEEDCHANGE.LOCK'):
     while (os.path.exists(filename)):
-            logging.debug("Waiting IP to be changed")
+            print("Waiting IP to be changed")
 
 
 def is_already_done(in_link,in_status):
@@ -232,17 +225,17 @@ def is_already_done(in_link,in_status):
 def check_file_connect(filename='NEEDCHANGE.LOCK'):
     while True:
         if os.path.exists(filename):
-            logging.debug("Will Change the IP")
+            print("Will Change the IP")
             connect(run_time_limit=10)
             try:
                 os.remove(filename)
             except:
                 pass
-            logging.debug("IP is Changed")
+            print("IP is Changed")
             sleep(5)
             
         else:
-            logging.debug("IP will not be changed")
+            print("IP will not be changed")
             sleep(2)
 
 
@@ -265,7 +258,7 @@ def change_ip(max_robot,update_block):
     robot_count = len(robo_files)
     
     while(True):
-        logging.debug("Will not change the IP")
+        print("Will not change the IP")
         sleep(3)
 
         if robot_count >= max_robot:
@@ -273,7 +266,7 @@ def change_ip(max_robot,update_block):
             with open('C:\\temp\\IPCHANGE.IPCH','w') as f:
                 f.write("CHANGINGIP")
 
-            logging.debug("IP will bechanged")        
+            print("IP will bechanged")        
             status = 'disconnected'
             re_try_time = 0
             while status != 'CONNECTED':
@@ -285,7 +278,7 @@ def change_ip(max_robot,update_block):
                 if re_try_time >= 5:
                     send_email2(send_to='pankaj.kushwaha@rho.ai',body='Coluld Not Changed Ip after 5 attempts',subject='Could not change IP')
                     re_try_time = 0
-            logging.debug("Ip Has been changed")
+            print("Ip Has been changed")
             
             for file in robo_files:
                 os.remove(file)
