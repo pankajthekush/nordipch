@@ -47,7 +47,7 @@ This paramter is used to get only server ids which are not ever used
 <h3>disconnect()</h3>
 Disconnects from nord server
 
-<h1>Entry Points<h1>
+<h1>Entry Points</h1>
 <b>nipchanger</b>
 Options:
   --max-robot INTEGER  --> Use this flag to change IP based on file in C:/temp
