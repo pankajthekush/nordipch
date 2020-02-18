@@ -294,12 +294,9 @@ def change_ip(max_robot,update_block):
         
         robo_files = glob.glob(r'C:\temp\*.LOCK')
         robot_count = len(robo_files)
-    
-        robo_files = glob.glob(r'C:\temp\*.LOCK')
-        robot_count = len(robo_files)
         
 
 if __name__ == "__main__":
     #connect(ignore_current_conn=True,OVER_RIDE_TIME=True)
     #connect(nord_table_name='tbl_nord_ip',lang='ENGLISH',ignore_current_conn=True,OVER_RIDE_TIME=True,keep_blockd=True)
-    
+    pass
