@@ -211,8 +211,6 @@ def wait_send_response(filename='NEEDCHANGE.LOCK'):
             logging.debug("Waiting IP to be changed")
 
 
-
-
 def is_already_done(in_link,in_status):
 
     if not os.path.exists('ip_url.csv'):
