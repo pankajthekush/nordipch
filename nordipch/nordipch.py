@@ -271,6 +271,10 @@ def change_ip(max_robot,update_block):
         sleep(3)
 
         if robot_count >= max_robot:
+            
+            with open('C:\\temp\\IPCHANGE.IPCH','w') as f:
+                f.write("CHANGINGIP")
+
             logging.debug("IP will bechanged")        
             status = 'disconnected'
             re_try_time = 0
