@@ -260,7 +260,7 @@ def create_lock_file(filename='NEEDCHANGE.LOCK'):
 
 @click.command()
 @click.option('--max-robot',type=int,default=3)
-@click.option('--update-block',type=bool,default=False)
+@click.option('--update-block',type=bool,default=True)
 
 def change_ip(max_robot,update_block):
     robo_files = glob.glob(r'C:\temp\*.LOCK')
@@ -292,11 +292,12 @@ def change_ip(max_robot,update_block):
             for file in robo_files:
                 os.remove(file)
         
+        if os.path.exists('C:\\temp\\IPCHANGE.IPCH'):
+            os.remove('C:\\temp\\IPCHANGE.IPCH')
+
         robo_files = glob.glob(r'C:\temp\*.LOCK')
         robot_count = len(robo_files)
         
 
 if __name__ == "__main__":
-    #connect(ignore_current_conn=True,OVER_RIDE_TIME=True)
-    #connect(nord_table_name='tbl_nord_ip',lang='ENGLISH',ignore_current_conn=True,OVER_RIDE_TIME=True,keep_blockd=True)
-    pass
+    change_ip()
