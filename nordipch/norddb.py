@@ -114,6 +114,53 @@ def return_nord_id(nord_table_name=None,lang=None,region=None,keep_blockd=False)
     return nord_id
 
 
+
+def return_nord_data(nord_table_name=None,lang=None,region=None,keep_blockd=False):
+    
+    #BELOW IS VERY SHITTY CODE ,AND I KNOW PLEASE IMPORVE and notify me @pankajthekush@gmail.com if you could imporve it
+    if lang and not region and keep_blockd == False:
+        qry_str = sql.SQL("select * from {} where lang={} order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(lang))
+    if not lang and region and keep_blockd == False:
+        qry_str = sql.SQL("select * from {} where flag={} order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(region))
+    if lang and region and keep_blockd == False:
+        qry_str = sql.SQL("select * from {} where flag={} and lang = {} order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(region),sql.Literal(lang))
+    if not lang and not region and keep_blockd == False:
+        qry_str = sql.SQL("select * from {} order by random() limit 1").format(sql.Identifier(nord_table_name))
+    
+    #keepbloced = true
+    if lang and not region and keep_blockd == True:
+        qry_str = sql.SQL("select * from {} where lang={} and isblocked = false order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(lang))
+    if not lang and region and keep_blockd == True:
+        qry_str = sql.SQL("select * from {} where flag={} and isblocked = false order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(region))
+    if lang and region and keep_blockd == True:
+        qry_str = sql.SQL("select * from {} where flag={}  and lang = {}  and isblocked = false order by random() limit 1").format(sql.Identifier(nord_table_name),sql.Literal(region),sql.Literal(lang))
+    if not lang and not region and keep_blockd == True:
+        qry_str = sql.SQL("select * from {} order by random() limit 1").format(sql.Identifier(nord_table_name))
+
+
+
+    conn = return_db_conn()
+    nord_id = ''
+    cur = conn.cursor()
+
+    cur.execute(qry_str,(lang))
+
+
+    rows = cur.fetchall()
+    for row in rows:
+        nord_id = row[0]
+        nord_ip = row[1]
+        nord_name = row[2]
+        nord_domain = row[3]
+
+
+    cur.close()
+    conn.close() 
+    return (nord_id,nord_ip,nord_name,nord_domain)
+
+
+
+
 def update_nord_tbl(table_name = None):
     conn = return_db_conn()
     curser = conn.cursor()
