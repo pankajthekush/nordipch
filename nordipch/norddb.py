@@ -141,6 +141,10 @@ def return_nord_data(nord_table_name=None,lang=None,region=None,keep_blockd=Fals
 
     conn = return_db_conn()
     nord_id = ''
+    nord_ip = ''
+    nord_name = ''
+    nord_domain = ''
+    
     cur = conn.cursor()
 
     cur.execute(qry_str,(lang))
