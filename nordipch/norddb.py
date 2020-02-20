@@ -152,6 +152,7 @@ def return_nord_data(nord_table_name=None,lang=None,region=None,keep_blockd=Fals
 
     rows = cur.fetchall()
     for row in rows:
+        input(row)
         nord_id = row[0]
         nord_ip = row[1]
         nord_name = row[2]
@@ -191,7 +192,4 @@ def update_nord_tbl(table_name = None):
 
 
 if __name__ == "__main__":
-#    update_link_tbl(update_link='https://www.google.com/search?q=site:rjami.com Aurelia de La Maléne',
-#    status='COMPLETE')
-    # print(update_link_tbl(update_link='https://www.google.com/search?q=site:madrague.se Lars Frånstedt',
-    pass
+    print(return_nord_data(nord_table_name='tbl_nord_ip',lang='English',region=None,keep_blockd=False))
