@@ -40,11 +40,14 @@ class NProxy:
                 
     
     def cleanproxylist(self):
+        acceptable_flag = ['US']
         list_proxy = []
-
         for proxy in self.jsonnord:
-            isproxy = proxy['features']['proxy']
-            if isproxy:
+            flag = proxy['flag']
+
+            input(proxy)
+           
+            if flag in acceptable_flag:
                 list_proxy.append(proxy)
             self.jsonnord = list_proxy
 
@@ -80,11 +83,11 @@ class NProxy:
     def get_random_proxy(self):
         dict_pxy = dict()
         dict_proxy = random.choice(self.jsonnord)
-        dict_pxy['https'] = dict_proxy['ip_address']
+        dict_pxy['id'] = dict_proxy['id']
         return dict_pxy
 
 
 
 if __name__ == "__main__":
     npx = NProxy()
-    npx.get_random_proxy()
+    npx.cleanproxylist()
