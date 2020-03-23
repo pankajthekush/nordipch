@@ -288,5 +288,47 @@ def change_ip(max_robot,update_block):
         robot_count = len(robo_files)
         
 
+
+
+
+def change_ip2(nordip):
+    max_robot = 'How Many Instances you are running'
+    robo_files = glob.glob(r'C:\temp\*.LOCK')
+    robot_count = len(robo_files)
+    
+    while(True):
+        print("Will not change the IP")
+        sleep(3)
+
+        if robot_count >= max_robot:
+            
+            with open('C:\\temp\\IPCHANGE.IPCH','w') as f:
+                f.write("CHANGINGIP")
+
+            print("IP will bechanged")        
+            status = 'disconnected'
+            re_try_time = 0
+            while status != 'CONNECTED':
+                try:
+                    status,_,_ = connect(serverid=nordip,ignore_current_conn=True,OVER_RIDE_TIME=True)
+                except Exception:
+                    status = 'disconnected'
+                re_try_time += 1
+                if re_try_time >= 5:
+                    re_try_time = 0
+            print("Ip Has been changed")
+            
+            for file in robo_files:
+                os.remove(file)
+        
+        if os.path.exists('C:\\temp\\IPCHANGE.IPCH'):
+            os.remove('C:\\temp\\IPCHANGE.IPCH')
+
+        robo_files = glob.glob(r'C:\temp\*.LOCK')
+        robot_count = len(robo_files)
+        
+
+
+
 if __name__ == "__main__":
-    change_ip()
+    change_ip2()
