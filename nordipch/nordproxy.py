@@ -44,10 +44,9 @@ class NProxy:
         list_proxy = []
         for proxy in self.jsonnord:
             flag = proxy['flag']
-
-            input(proxy)
+            load = proxy['load']
            
-            if flag in acceptable_flag:
+            if flag in acceptable_flag and load <= 80:
                 list_proxy.append(proxy)
             self.jsonnord = list_proxy
 
