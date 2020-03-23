@@ -19,6 +19,8 @@ class NProxy:
         self.Session = session()
         self.Session.headers = self.headers
         self.jsonnord = None
+        self.getipfile()
+        self.cleanproxylist()
     
     def download_file(self,link='https://api.nordvpn.com/server',filename = 'nordip.json'):
         
@@ -37,6 +39,16 @@ class NProxy:
         handle.close()
                 
     
+    def cleanproxylist(self):
+        list_proxy = []
+
+        for proxy in self.jsonnord:
+            isproxy = proxy['features']['proxy']
+            if isproxy:
+                list_proxy.append(proxy)
+            self.jsonnord = list_proxy
+
+
     def getipfile(self):
         last_updated = None
         is_available = os.path.exists('nordip.json')
@@ -66,12 +78,13 @@ class NProxy:
         return jobj
     
     def get_random_proxy(self):
+        dict_pxy = dict()
         dict_proxy = random.choice(self.jsonnord)
-        print(dict_proxy)
+        dict_pxy['https'] = dict_proxy['ip_address']
+        return dict_proxy
 
 
 
 if __name__ == "__main__":
     npx = NProxy()
-    npx.getipfile()
     npx.get_random_proxy()
