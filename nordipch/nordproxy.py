@@ -81,7 +81,7 @@ class NProxy:
         dict_pxy = dict()
         dict_proxy = random.choice(self.jsonnord)
         dict_pxy['https'] = dict_proxy['ip_address']
-        return dict_proxy
+        return dict_pxy
 
 
 
