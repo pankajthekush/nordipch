@@ -276,7 +276,7 @@ def change_ip(max_robot,update_block):
                     status = 'disconnected'
                 re_try_time += 1
                 if re_try_time >= 5:
-                    send_email2(send_to='komal.pandita@rho.ai',body='Coluld Not Changed Ip after 5 attempts',subject='Could not change IP')
+                    send_email2(send_to='pankaj.kushwaha@rho.ai',body='Coluld Not Changed Ip after 5 attempts',subject='Could not change IP')
                     re_try_time = 0
             print("Ip Has been changed")
             
