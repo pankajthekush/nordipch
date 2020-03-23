@@ -80,9 +80,9 @@ class NProxy:
         return jobj
     
     def get_random_proxy(self):
-        dict_pxy = dict()
+        dict_pxy = None
         dict_proxy = random.choice(self.jsonnord)
-        dict_pxy['id'] = dict_proxy['id']
+        dict_pxy = dict_proxy['id']
         return dict_pxy
 
 

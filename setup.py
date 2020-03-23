@@ -9,11 +9,11 @@ print(current_path)
 from glob import glob
 setuptools.setup(
     name="nordipch",
-    version="0.4",
+    version="0.5",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     entry_points ={'console_scripts': ['nchange = nordipch.nordipch:check_file_connect',
-                                        'nipchanger=nordipch.nordipch:change_ip']},
+                                        'nipchanger=nordipch.nordipch:change_ip2']},
     description="A Package to change NordVPN servers",
     long_description=long_description,
     long_description_content_type="text/markdown",

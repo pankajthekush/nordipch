@@ -290,18 +290,19 @@ def change_ip(max_robot,update_block):
 
 
 
-
-def change_ip2(nordip):
-    max_robot = 'How Many Instances you are running'
+from nordproxy import NProxy
+def change_ip2():
+    max_robot = int(input('How Many Instances you are running : '))
     robo_files = glob.glob(r'C:\temp\*.LOCK')
     robot_count = len(robo_files)
-    
+    npx = NProxy()
+
     while(True):
         print("Will not change the IP")
         sleep(3)
 
         if robot_count >= max_robot:
-            
+            nordip = npx.get_random_proxy()
             with open('C:\\temp\\IPCHANGE.IPCH','w') as f:
                 f.write("CHANGINGIP")
 
