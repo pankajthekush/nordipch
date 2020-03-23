@@ -166,7 +166,7 @@ def return_nord_data(nord_table_name=None,lang=None,region=None,keep_blockd=Fals
 
 
 
-def update_nord_tbl(table_name = None):
+def update_nord_tbl(table_name = 'tbl_nord_ip'):
     conn = return_db_conn()
     curser = conn.cursor()
     r = requests.get('https://api.nordvpn.com/server')
@@ -192,4 +192,5 @@ def update_nord_tbl(table_name = None):
 
 
 if __name__ == "__main__":
-    print(return_nord_data(nord_table_name='tbl_nord_ip',lang='English',region=None,keep_blockd=False))
+    #print(return_nord_data(nord_table_name='tbl_nord_ip',lang='English',region=None,keep_blockd=False))    
+    update_nord_tbl()
