@@ -89,11 +89,6 @@ def isconnected():
     location,ip,isp,status = jobj['location'],jobj['ip'],jobj['isp'],jobj['status']
     return location,ip,isp,status
     
-    
-
-     
-    
-
 
 
    
@@ -145,10 +140,10 @@ def connect(serverid=None):
     ip = None
     isp = None
     status = None
-    for i in range(10):
+    for i in range(5):
         sleep(5)
         location,ip,isp,status = isconnected()
-        print(f'Current Connection {(location,ip,isp,status)}')
+        print(f'Current Connection {(location,ip,isp,status)} with ID= {serverid}')
         if status == False:  
             location,ip,isp,status = isconnected()
         else:
@@ -197,25 +192,23 @@ def change_ip2():
     robo_files = glob.glob(r'C:\temp\*.LOCK')
     robot_count = len(robo_files)
     npx = NProxy()
-
+    location,ip,isp,status = isconnected()
     while(True):
-        print("Will not change the IP")
+        print(f"Asking for {max_robot} lock(s) found {robot_count}, Current Connection {(location,ip,isp,status)}")        
         sleep(3)
         if robot_count >= max_robot:
             nordip = npx.get_random_proxy()
             with open('C:\\temp\\IPCHANGE.IPCH','w') as f:
                 f.write("CHANGINGIP")
-
-            print(f"Asking for {max_robot} locks ,found {robot_count}")        
             status = False
             re_try_time = 0
-            while not status:
+            while not status == True:
                 location,ip,isp,status = connect(serverid=nordip)
                 print(location,ip,isp,status)
                 re_try_time += 1
                 if re_try_time >= 5:
                     re_try_time = 0
-                    print(f"Count not connect with ID {nordip}, retrying with new id")
+                    print(f"Could not connect with ID {nordip}, retrying with new id")
                     nordip = npx.get_random_proxy()
             print("Ip Has been changed")
             
