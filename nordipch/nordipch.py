@@ -247,49 +247,6 @@ def create_lock_file(filename='NEEDCHANGE.LOCK'):
         f.close()
     
 
-
-@click.command()
-@click.option('--max-robot',type=int,default=3)
-@click.option('--update-block',type=bool,default=True)
-
-def change_ip(max_robot,update_block):
-    robo_files = glob.glob(r'C:\temp\*.LOCK')
-    robot_count = len(robo_files)
-    
-    while(True):
-        print("Will not change the IP")
-        sleep(3)
-
-        if robot_count >= max_robot:
-            
-            with open('C:\\temp\\IPCHANGE.IPCH','w') as f:
-                f.write("CHANGINGIP")
-
-            print("IP will bechanged")        
-            status = 'disconnected'
-            re_try_time = 0
-            while status != 'CONNECTED':
-                try:
-                    status,_,_ = connect(nord_table_name='tbl_nord_ip',lang='ENGLISH',ignore_current_conn=True,OVER_RIDE_TIME=True,keep_blockd=update_block)
-                except Exception:
-                    status = 'disconnected'
-                re_try_time += 1
-                if re_try_time >= 5:
-                    re_try_time = 0
-            print("Ip Has been changed")
-            
-            for file in robo_files:
-                os.remove(file)
-        
-        if os.path.exists('C:\\temp\\IPCHANGE.IPCH'):
-            os.remove('C:\\temp\\IPCHANGE.IPCH')
-
-        robo_files = glob.glob(r'C:\temp\*.LOCK')
-        robot_count = len(robo_files)
-        
-
-
-
 from nordproxy import NProxy
 def change_ip2():
     max_robot = int(input('How Many Instances you are running : '))
