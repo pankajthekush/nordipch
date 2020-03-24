@@ -187,8 +187,7 @@ def disconnect():
 
 
 from nordproxy import NProxy
-def change_ip2():
-    max_robot = int(input('How Many Instances you are running : '))
+def change_ip2(max_robot=1):
     robo_files = glob.glob(r'C:\temp\*.LOCK')
     robot_count = len(robo_files)
     npx = NProxy()
