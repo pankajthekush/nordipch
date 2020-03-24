@@ -4,7 +4,7 @@ import sys
 from time import sleep
 import ipaddress
 import subprocess
-
+import json
 import os
 import time
 import csv
@@ -12,6 +12,7 @@ import requests
 import click
 import inspect
 import glob
+
 
 cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
 if cmd_folder not in sys.path:
@@ -65,6 +66,36 @@ def  get_current_ip():
 
     return [prev_ip,current_ip,next_ip]
 
+
+def isconnected():
+    statuslink = 'https://nordvpn.com/wp-admin/admin-ajax.php?action=get_user_info_data'
+    
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'X-Requested-With': 'XMLHttpRequest',
+    'Referer': 'https://nordvpn.com/servers',
+    'Cache-Control': 'max-age=0' }
+    try:
+        r = requests.get(statuslink,headers=headers)
+    except:
+        location,ip,isp,status = 'notfound','notfound','notfound',False
+        return location,ip,isp,status
+
+
+    jobj = json.loads(r.text)
+    location,ip,isp,status = jobj['location'],jobj['ip'],jobj['isp'],jobj['status']
+    return location,ip,isp,status
+    
+    
+
+     
+    
+
+
+
    
 def status():
 
@@ -94,34 +125,10 @@ def status():
     print(f"DISCONNECTED, {ip_address},{id}")
     return "DISCONNECTED" , ip_address,id
 
-def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_name=None,lang=None,region=None,ignore_current_conn=False,keep_blockd=False):
-    
-    is_recent_run = recent_run(run_time_limit)
-    #If run recently , then do  return and exit
-    if is_recent_run and OVER_RIDE_TIME == False:
-        return ("RECENT","RECENT","RECENT") 
-    else:
-        pass
-
-    if os.path.exists('CONN.LOCK') and ignore_current_conn == False:
-        print("Connection still in progress , Aborting..., You may want to delete CONN.LOCK if needed")
-        return ("INPROGRESS","INPROGRESS","INPROGRESS")
-
-    with open("CONN.LOCK",'w') as f:
-        f.write("CONNINPROGRESS")
-    #Disconnect First
-    nord_api_text = return_nord_json()
-    if isinstance(nord_api_text,Exception):
-        return 'ERROR','ERROR','ERROR'
-
+def connect(serverid=None):    
+    print(isconnected())
     print("Start Connect..")
-    if serverid is None and not nord_table_name is None :
-        serverid = return_nord_id(nord_table_name= nord_table_name,lang=lang,region=region,keep_blockd=keep_blockd)
-    elif not serverid is None and nord_table_name is None:
-        pass
-    else:
-        pass
-
+    
     print("Disconnecting..")
     subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True) 
     sleep(2)
@@ -134,46 +141,29 @@ def connect(serverid=None,run_time_limit=10,OVER_RIDE_TIME = False,nord_table_na
 
     subprocess.run(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     #Wait till connected
-    state = None
-    nid = None
-    nip = None
-
+    location = None
+    ip = None
+    isp = None
+    status = None
     for i in range(10):
-        try:
-            state,nip,nid = status()
-        except TypeError as error:
-            print("Could Not Connect , re-tries exceeded {}".format(error))
-            return ("ERROR",'ERROR','ERROR')
-
-        if state == 'DISCONNECTED':
-            print(f'Trying Connection : {i}...')
-            sleep(3)
-            write_time()
-            state,nid,nip = status()
+        sleep(5)
+        location,ip,isp,status = isconnected()
+        print(f'Current Connection {(location,ip,isp,status)}')
+        if status == False:  
+            location,ip,isp,status = isconnected()
         else:
-        
-            #retstatus = status()
-      
-            try:
-                os.remove('CONN.LOCK')
-            except:
-                pass
-            write_time()
-            return (state,nid,nip)
-    
-    retstatus = status()
-    print(retstatus)
+            return (location,ip,isp,status)
+           
 
-    try:
-        os.remove('CONN.LOCK')
-    except:
-        pass
-    write_time()
-    return retstatus
+    
+    location,ip,isp,status = isconnected()
+    return (location,ip,isp,status)
+
 
 def write_time():
     with open(last_run_file,'w') as f:
         f.write(str(time.time()))
+
 
 def recent_run(time_limit=10):
 
@@ -198,54 +188,8 @@ def disconnect():
     print(retstatus)
     return retstatus
 
-def wait_send_response(filename='NEEDCHANGE.LOCK'):
-    while (os.path.exists(filename)):
-            print("Waiting IP to be changed")
 
 
-def is_already_done(in_link,in_status):
-
-    if not os.path.exists('ip_url.csv'):
-        return False
-
-    in_link,in_status = str(in_link), str(in_status)
-    with open('ip_url.csv',encoding='utf-8',newline='') as f:
-        csvfile = csv.reader(f)
-
-        for row in csvfile:
-            link = row[0]
-            status = row[1]
-            if link == in_link and status == in_status:
-                return True
-           
-    return False
-
-
-def check_file_connect(filename='NEEDCHANGE.LOCK'):
-    while True:
-        if os.path.exists(filename):
-            print("Will Change the IP")
-            connect(run_time_limit=10)
-            try:
-                os.remove(filename)
-            except:
-                pass
-            print("IP is Changed")
-            sleep(5)
-            
-        else:
-            print("IP will not be changed")
-            sleep(2)
-
-
-def create_lock_file(filename='NEEDCHANGE.LOCK'):
-
-    if os.path.exists(filename):
-        pass
-    else:
-        f = open(filename,'w')
-        f.close()
-    
 
 from nordproxy import NProxy
 def change_ip2():
@@ -257,23 +201,22 @@ def change_ip2():
     while(True):
         print("Will not change the IP")
         sleep(3)
-
         if robot_count >= max_robot:
             nordip = npx.get_random_proxy()
             with open('C:\\temp\\IPCHANGE.IPCH','w') as f:
                 f.write("CHANGINGIP")
 
-            print("IP will bechanged")        
-            status = 'disconnected'
+            print(f"Asking for {max_robot} locks ,found {robot_count}")        
+            status = False
             re_try_time = 0
-            while status != 'CONNECTED':
-                try:
-                    status,_,_ = connect(serverid=nordip,ignore_current_conn=True,OVER_RIDE_TIME=True)
-                except Exception:
-                    status = 'disconnected'
+            while not status:
+                location,ip,isp,status = connect(serverid=nordip)
+                print(location,ip,isp,status)
                 re_try_time += 1
                 if re_try_time >= 5:
                     re_try_time = 0
+                    print(f"Count not connect with ID {nordip}, retrying with new id")
+                    nordip = npx.get_random_proxy()
             print("Ip Has been changed")
             
             for file in robo_files:
@@ -290,3 +233,5 @@ def change_ip2():
 
 if __name__ == "__main__":
     change_ip2()
+    #isconnected()
+    #print(connect()

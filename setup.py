@@ -21,7 +21,7 @@ setuptools.setup(
     packages=['nordipch'],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Operating System :: Windows 10",
+        "Operating System :: Microsoft :: Windows :: Windows 10",
     ],
     python_requires='>=3.6',
     install_requires=['requests>=2.22.0'],
