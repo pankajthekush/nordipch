@@ -50,4 +50,4 @@ Disconnects from nord server
 <h1>Entry Points</h1>
 <b>nipchanger</b>
 <br>
-<p>It will ask for all the instances you are running</p>
+It will ask for all the instances you are running , and change the IP based on .LOCK file
