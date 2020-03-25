@@ -20,6 +20,7 @@ class NProxy:
                 'Upgrade-Insecure-Requests': '1',
                 'Cache-Control': 'max-age=0'}
         self.useragents = self.get_ua_file()
+        self.get_random_ua()
         self.Session = session()
         self.Session.headers = self.headers
         self.jsonnord = None
