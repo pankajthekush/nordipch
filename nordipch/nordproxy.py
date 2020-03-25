@@ -25,6 +25,7 @@ class NProxy:
         self.jsonnord = None
         self.getipfile()
         self.cleanproxylist()
+        self.get_ua_file()
 
     def download_file(self,link='https://api.nordvpn.com/server',filename = 'nordip.json'):
         
