@@ -104,6 +104,7 @@ class NProxy:
         ua = random.choice(self.useragents)
         with open('ua.txt','w',encoding='utf-8') as f:
             f.write(ua)
+        self.useragents.remove(ua)
         return ua
             
 
