@@ -75,6 +75,7 @@ class NProxy:
                 self.jsonnord = jobj
         else:
             self.download_file()
+            time.sleep(3)
             with open('nordip.json','r',encoding='utf-8') as f:
                 jobj = json.load(f)
                 self.jsonnord = jobj
@@ -113,4 +114,4 @@ class NProxy:
 
 if __name__ == "__main__":
     npx = NProxy()
-    print(npx.cleanproxylist())
+
