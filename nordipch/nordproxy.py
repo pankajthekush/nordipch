@@ -6,6 +6,9 @@ import json
 import time
 import random
 
+production = False
+current_path = os.path.dirname(os.path.realpath(__file__))
+
 class NProxy:
     def __init__(self):
         self.headers = {
@@ -16,12 +19,13 @@ class NProxy:
                 'Connection': 'keep-alive',
                 'Upgrade-Insecure-Requests': '1',
                 'Cache-Control': 'max-age=0'}
+        self.useragents = self.get_ua_file()
         self.Session = session()
         self.Session.headers = self.headers
         self.jsonnord = None
         self.getipfile()
         self.cleanproxylist()
-    
+
     def download_file(self,link='https://api.nordvpn.com/server',filename = 'nordip.json'):
         
         resp = self.Session.get(link,stream=True)
@@ -52,19 +56,21 @@ class NProxy:
 
 
     def getipfile(self):
-        last_updated = None
         is_available = os.path.exists('nordip.json')
-        last_updated_day = None
-        current_day = None
         
+        if is_available and not production:
+            with open('nordip.json','r',encoding='utf-8') as f:
+                jobj = json.load(f)
+                self.jsonnord = jobj
+                return 0
+
+
         if is_available:
-            last_updated = os.path.getmtime('nordip.json')
-            last_updated_day = time.localtime(last_updated)[2]
-            current_day =  time.localtime(time.time())[2]
-            if current_day == last_updated_day:            
-                 with open('nordip.json','r',encoding='utf-8') as f:
-                    jobj = json.load(f)
-                    self.jsonnord = jobj
+            os.remove('nordip.json')
+            self.download_file()
+            with open('nordip.json','r',encoding='utf-8') as f:
+                jobj = json.load(f)
+                self.jsonnord = jobj
         else:
             self.download_file()
             with open('nordip.json','r',encoding='utf-8') as f:
@@ -83,10 +89,25 @@ class NProxy:
         dict_pxy = None
         dict_proxy = random.choice(self.jsonnord)
         dict_pxy = dict_proxy['id']
+        self.jsonnord.remove(dict_proxy) #remove this proxy from list
+        self.get_random_ua()
         return dict_pxy
 
+    def get_ua_file(self):
+        useragents = list()
+        file_path = os.path.join(current_path,'ua','ua.csv')
+        with open(file_path,'r',encoding='utf-8') as f:
+            useragents = [ua.strip() for ua in f.readlines()]
+        return useragents
+    
+    def get_random_ua(self):
+        ua = random.choice(self.useragents)
+        with open('ua.txt','w',encoding='utf-8') as f:
+            f.write(ua)
+        return ua
+            
 
 
 if __name__ == "__main__":
     npx = NProxy()
-    npx.cleanproxylist()
+    print(npx.cleanproxylist())

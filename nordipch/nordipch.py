@@ -12,7 +12,7 @@ import requests
 import click
 import inspect
 import glob
-
+from nordproxy import NProxy
 
 cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
 if cmd_folder not in sys.path:
@@ -185,8 +185,6 @@ def disconnect():
 
 
 
-
-from nordproxy import NProxy
 def change_ip2(max_robot=1):
     robo_files = glob.glob(r'C:\temp\*.LOCK')
     robot_count = len(robo_files)
@@ -197,8 +195,6 @@ def change_ip2(max_robot=1):
         sleep(3)
         if robot_count >= max_robot:
             nordip = npx.get_random_proxy()
-            with open('C:\\temp\\IPCHANGE.IPCH','w') as f:
-                f.write("CHANGINGIP")
             status = False
             re_try_time = 0
             while not status == True:
@@ -214,9 +210,6 @@ def change_ip2(max_robot=1):
             for file in robo_files:
                 os.remove(file)
         
-        if os.path.exists('C:\\temp\\IPCHANGE.IPCH'):
-            os.remove('C:\\temp\\IPCHANGE.IPCH')
-
         robo_files = glob.glob(r'C:\temp\*.LOCK')
         robot_count = len(robo_files)
         
@@ -224,6 +217,6 @@ def change_ip2(max_robot=1):
 
 
 if __name__ == "__main__":
-    change_ip2()
-    #isconnected()
-    #print(connect()
+    npx =NProxy()
+    #print(npx.get_random_proxy())
+    print(npx.get_random_proxy())

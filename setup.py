@@ -9,7 +9,7 @@ print(current_path)
 from glob import glob
 setuptools.setup(
     name="nordipch",
-    version="0.2",
+    version="0.4",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     entry_points ={'console_scripts': ['nchange = nordipch.nordipch:check_file_connect',
@@ -26,5 +26,5 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=['requests>=2.22.0'],
     include_package_data = True,
-    data_files = [(os.path.join(current_path, ''), glob('nordipch/*.json'))]
+    data_files = [(os.path.join(current_path, 'ua'), glob('nordipch/ua/*.csv'))]
 )
