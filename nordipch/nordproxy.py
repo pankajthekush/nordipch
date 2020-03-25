@@ -6,7 +6,7 @@ import json
 import time
 import random
 
-production = False
+production = True
 current_path = os.path.dirname(os.path.realpath(__file__))
 
 class NProxy:
