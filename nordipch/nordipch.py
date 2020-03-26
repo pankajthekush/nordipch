@@ -183,7 +183,35 @@ def disconnect():
     print(retstatus)
     return retstatus
 
-
+def change_ip(max_robot=1):
+    max_robot = int(input("Enter Number of instances you are running : "))
+    robo_files = glob.glob(r'C:\temp\*.LOCK')
+    robot_count = len(robo_files)
+    npx = NProxy()
+    location,ip,isp,status = isconnected()
+    while(True):
+        print(f"Asking for {max_robot} lock(s) found {robot_count}, Current Connection {(location,ip,isp,status)}")        
+        sleep(3)
+        if robot_count >= max_robot:
+            nordip = npx.get_random_proxy()
+            status = False
+            re_try_time = 0
+            while not status == True:
+                location,ip,isp,status = connect(serverid=nordip)
+                print(location,ip,isp,status)
+                re_try_time += 1
+                if re_try_time >= 5:
+                    re_try_time = 0
+                    print(f"Could not connect with ID {nordip}, retrying with new id")
+                    nordip = npx.get_random_proxy()
+            print("Ip Has been changed")
+            
+            for file in robo_files:
+                os.remove(file)
+        
+        robo_files = glob.glob(r'C:\temp\*.LOCK')
+        robot_count = len(robo_files)
+        
 
 def change_ip2(max_robot=1):
     robo_files = glob.glob(r'C:\temp\*.LOCK')
