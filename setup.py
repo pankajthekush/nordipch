@@ -9,7 +9,7 @@ print(current_path)
 from glob import glob
 setuptools.setup(
     name="nordipch",
-    version="0.6",
+    version="0.7",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     entry_points ={'console_scripts': ['nchange = nordipch.nordipch:check_file_connect',

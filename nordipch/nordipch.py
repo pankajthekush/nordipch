@@ -9,7 +9,6 @@ import os
 import time
 import csv
 import requests
-import click
 import inspect
 import glob
 from nordproxy import NProxy
