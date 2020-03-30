@@ -183,6 +183,9 @@ def disconnect():
     return retstatus
 
 def change_ip(max_robot=1):
+    #This is standalone method to be called from console when code integration is not possible
+    #This method is in entry point change_ip
+    
     max_robot = int(input("Enter Number of instances you are running : "))
     robo_files = glob.glob(r'C:\temp\*.LOCK')
     robot_count = len(robo_files)
@@ -213,6 +216,9 @@ def change_ip(max_robot=1):
         
 
 def change_ip2(max_robot=1):
+    #This method is intended to be integrated to other application
+    #Make sure you call it only once, if you application make concurrent reqeusts it is possible that it
+    #may be called multiple times
     robo_files = glob.glob(r'C:\temp\*.LOCK')
     robot_count = len(robo_files)
     npx = NProxy()
