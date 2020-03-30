@@ -184,7 +184,7 @@ def disconnect():
 
 def change_ip(max_robot=1):
     #This is standalone method to be called from console when code integration is not possible
-    #This method is in entry point change_ip
+    #This method is in entry point is nipchanger
     
     max_robot = int(input("Enter Number of instances you are running : "))
     robo_files = glob.glob(r'C:\temp\*.LOCK')
