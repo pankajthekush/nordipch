@@ -5,12 +5,15 @@ import requests
 import json
 import time
 import random
+import zipfile
+import shutil
+
 
 production = True
 current_path = os.path.dirname(os.path.realpath(__file__))
 
 class NProxy:
-    def __init__(self):
+    def __init__(self,production = True):
         self.headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -19,6 +22,7 @@ class NProxy:
                 'Connection': 'keep-alive',
                 'Upgrade-Insecure-Requests': '1',
                 'Cache-Control': 'max-age=0'}
+        self.production = production
         self.useragents = self.get_ua_file()
         self.get_random_ua()
         self.Session = session()
@@ -29,7 +33,8 @@ class NProxy:
         self.get_ua_file()
 
     def download_file(self,link='https://api.nordvpn.com/server',filename = 'nordip.json'):
-        
+        print('\n')
+        print(f'Downloading {filename}\n')
         resp = self.Session.get(link,stream=True)
         handle = open(filename,'wb')
 
@@ -60,7 +65,7 @@ class NProxy:
     def getipfile(self):
         is_available = os.path.exists('nordip.json')
         
-        if is_available and not production:
+        if is_available and self.production == False:
             with open('nordip.json','r',encoding='utf-8') as f:
                 jobj = json.load(f)
                 self.jsonnord = jobj
@@ -89,12 +94,12 @@ class NProxy:
         return jobj
     
     def get_random_proxy(self):
-        dict_pxy = None
         dict_proxy = random.choice(self.jsonnord)
-        dict_pxy = dict_proxy['id']
+        pxy_id = dict_proxy['id']
+        pxy_domain = dict_proxy['domain']
         self.jsonnord.remove(dict_proxy) #remove this proxy from list
         self.get_random_ua()
-        return dict_pxy
+        return pxy_id,pxy_domain
 
     def get_ua_file(self):
         useragents = list()
@@ -109,9 +114,31 @@ class NProxy:
             f.write(ua)
         self.useragents.remove(ua)
         return ua
-            
+    
+    def download_ovpn_files(self):
+        tcp_exists = os.path.exists('ovpn_tcp')
+        udp_exists = os.path.exists('ovpn_udp')
 
+        if tcp_exists and udp_exists and self.production == False:
+            return 0
+       
+        if os.path.exists('ovpn.zip'):
+            os.remove('ovpn.zip')
+       
+        if os.path.exists('ovpn_tcp'):
+            shutil.rmtree('ovpn_tcp')
+        if os.path.exists('ovpn_udp'):
+            shutil.rmtree('ovpn_udp')
+
+        self.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
+        with zipfile.ZipFile('ovpn.zip', 'r') as zip_ref:
+            zip_ref.extractall(str(os.getcwd()))
+        os.remove('ovpn.zip')
 
 if __name__ == "__main__":
-    npx = NProxy()
-
+    npx = NProxy(production=True)
+    npx.download_ovpn_files()
+    print(npx.get_random_proxy())
+    # npx.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
+    # with zipfile.ZipFile('ovpn.zip', 'r') as zip_ref:
+    #     zip_ref.extractall(str(os.getcwd()))

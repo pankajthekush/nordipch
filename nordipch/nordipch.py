@@ -4,6 +4,7 @@ import sys
 from time import sleep
 import ipaddress
 import subprocess
+from subprocess import Popen, PIPE
 import json
 import os
 import time
@@ -12,12 +13,10 @@ import requests
 import inspect
 import glob
 from nordproxy import NProxy
+import sys
+import telnetlib
 
-cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-if cmd_folder not in sys.path:
-    sys.path.insert(0, cmd_folder)
-
-from norddb import return_nord_id
+sys_platform = sys.platform
 current_path = os.path.dirname(os.path.realpath(__file__))
 last_run_file = os.path.join(current_path,'LASTRUN.txt')
 block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
@@ -25,6 +24,38 @@ block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
 
 nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
+
+
+def management_console(commandname =b'signal SIGTERM\n' ):
+    host = 'localhost'
+    port = 7505
+    
+    try:
+        session = telnetlib.Telnet(host=host,port=port)
+        session.write(commandname)
+    except ConnectionRefusedError:
+        print("management console not running")
+        
+
+def return_server_domain_name(domain_name):
+    domain_tcp = domain_name + '.tcp.ovpn'
+    domain_udp = domain_name +'.udp.ovpn'
+    dict_return_files = dict()
+
+    tcp_files = os.listdir('ovpn_tcp')
+    udP_files = os.listdir('ovpn_udp')
+    
+    if domain_tcp in tcp_files:
+        dict_return_files['tcp'] = os.path.join('ovpn_tcp', domain_tcp)
+        with open(dict_return_files['tcp'],'a') as f:
+            f.write('management localhost 7505')
+    if domain_udp in udP_files:
+        dict_return_files['udp'] = os.path.join( 'ovpn_udp', domain_udp)
+        with open(dict_return_files['udp'],'a') as f:
+            f.write('management localhost 7505')
+    input(dict_return_files)
+    return dict_return_files
+
 
 def return_nord_json():
     f = open(os.path.join(current_path,'nordip.json'),'rb')
@@ -90,50 +121,28 @@ def isconnected():
     
 
 
-   
-def status():
-
-    nord_api_text = return_nord_json()
-    if isinstance(nord_api_text,Exception):
-        return nord_api_text
+def connect(serverid=None,serverdomain = 'ovpn_tcp/al9.nordvpn.com.tcp.ovpn'):
     
-    nord_ip_table = json.loads(nord_api_text)
-    v_ip = get_current_ip()
-    id = None
-    for ip_data in nord_ip_table:
-        
-        ip_address = str(ip_data['ip_address'].strip())
-        if ip_address in v_ip:
-            id = ip_data['id']
-            print(f"CONNECTED, {ip_address},{id}")
-            return "CONNECTED", ip_address,id
-        else:
-            for ip in v_ip:
-                id = ip_data['id']
-                first_suffix_ip = ip.split(".")[:-1]
-                base_ip = ".".join(ip for ip in first_suffix_ip)
-                if base_ip in ip_address:
-                    return "CONNECTED", ip_address,id
 
-
-    print(f"DISCONNECTED, {ip_address},{id}")
-    return "DISCONNECTED" , ip_address,id
-
-def connect(serverid=None):    
     print(isconnected())
     print("Start Connect..")
     
     print("Disconnecting..")
-    subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True) 
+
+    if sys.platform == 'linux':
+        management_console()
+    else:
+        subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True) 
     sleep(2)
 
-    if not serverid is None:
-        win_cmd = f'nordvpn -c -i {serverid}'
+    input('disconnexted')
+    if sys_platform == 'linux':
+        open_vpn_command = 'sudo','openvpn','--daemon','--config',serverdomain,'--auth-user-pass','vpnpass.txt'
+        input(open_vpn_command)
+        subprocess.Popen(open_vpn_command)
+        input('Command sent to change ip')
     else:
-        #if server Id not found , get the best server and connect
-        win_cmd = f'nordvpn -c'
-
-    subprocess.run(win_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+       pass
     #Wait till connected
     location = None
     ip = None
@@ -141,6 +150,7 @@ def connect(serverid=None):
     status = None
     for i in range(5):
         sleep(5)
+        print('Checking for connection')
         location,ip,isp,status = isconnected()
         print(f'Current Connection {(location,ip,isp,status)} with ID= {serverid}')
         if status == False:  
@@ -176,30 +186,29 @@ def recent_run(time_limit=10):
             print(f"Recent Run last run {total_time}s ago , Threshold time {time_limit}s")
             return True
 
-def disconnect():
-    subprocess.Popen('nordvpn -d',stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
-    retstatus = status()
-    print(retstatus)
-    return retstatus
+
 
 def change_ip(max_robot=1):
     #This is standalone method to be called from console when code integration is not possible
     #This method is in entry point is nipchanger
     
     max_robot = int(input("Enter Number of instances you are running : "))
-    robo_files = glob.glob(r'C:\temp\*.LOCK')
+    robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
     robot_count = len(robo_files)
-    npx = NProxy()
+    npx = NProxy(production=False)
     location,ip,isp,status = isconnected()
     while(True):
-        print(f"Asking for {max_robot} lock(s) found {robot_count}, Current Connection {(location,ip,isp,status)}")        
+        print(f"looking:{max_robot} lock(s) found:{robot_count},at {os.getcwd()} Current Connection {(location,ip,isp,status)}")        
         sleep(3)
         if robot_count >= max_robot:
-            nordip = npx.get_random_proxy()
+            nordip,norddomain = npx.get_random_proxy()
+            dict_config_files = return_server_domain_name(norddomain)
+            tcp_config,udp_config =  dict_config_files['tcp'],dict_config_files['udp']
+            input(tcp_config)
             status = False
             re_try_time = 0
             while not status == True:
-                location,ip,isp,status = connect(serverid=nordip)
+                location,ip,isp,status = connect(serverdomain=tcp_config)
                 print(location,ip,isp,status)
                 re_try_time += 1
                 if re_try_time >= 5:
@@ -211,7 +220,7 @@ def change_ip(max_robot=1):
             for file in robo_files:
                 os.remove(file)
         
-        robo_files = glob.glob(r'C:\temp\*.LOCK')
+        robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
         robot_count = len(robo_files)
         
 
@@ -250,6 +259,11 @@ def change_ip2(max_robot=1):
 
 
 if __name__ == "__main__":
-    npx =NProxy()
+
+    #npx =NProxy(production=False)
     #print(npx.get_random_proxy())
-    print(npx.get_random_proxy())
+    # print(npx.get_random_proxy())
+    #connect()
+    #management_console()
+    #print(return_server_domain_name())
+    change_ip()

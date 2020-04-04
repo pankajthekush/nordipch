@@ -98,7 +98,7 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-.env
+M .env
 .venv
 env/
 venv/
@@ -130,3 +130,4 @@ ips.csv
 nordipch/dbdata.json
 nordip.json
 ua.txt
+vpnpass.txt
