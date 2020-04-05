@@ -31,6 +31,7 @@ current_ip_api = "http://myip.dnsomatic.com"
 
 
 def signal_handler(signal_received,frame):
+    print('\n')
     print('hang on...')
     location,ip,isp,status = isconnected()
     print(f'connected to {(location,isp)}')
@@ -152,8 +153,7 @@ def connect(serverid=None,serverdomain = 'ovpn_tcp/al9.nordvpn.com.tcp.ovpn'):
     
 
     print(isconnected())
-    print("Start Connect..")
-    
+ 
     print("Disconnecting..")
 
     if sys.platform == 'linux':
@@ -217,6 +217,48 @@ def change_ip(max_robot=1):
     #This method is in entry point is nipchanger
     
     max_robot = int(input("Enter Number of instances you are running : "))
+    robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
+    robot_count = len(robo_files)
+    npx = NProxy(production=False)
+    location,ip,isp,status = isconnected()
+    while(True):
+        signal(SIGINT, signal_handler)
+        print(f"looking:{max_robot} lock(s) found:{robot_count},at {os.getcwd()} Current Connection {(location,ip,isp,status)}")        
+        sleep(3)
+        if robot_count >= max_robot:
+            nordip,norddomain = npx.get_random_proxy()
+            dict_config_files = return_server_domain_name(norddomain)
+
+            while len(dict_config_files.keys()) == 0:
+                print("invlaid proxy found, getting new one")
+                #get the proxy till matching file with proxy is found
+                nordip,norddomain = npx.get_random_proxy()
+                dict_config_files = return_server_domain_name(norddomain)
+
+            tcp_config,_ =  dict_config_files['tcp'],dict_config_files['udp']
+            status = False
+            re_try_time = 0
+            while not status == True:
+                location,ip,isp,status = connect(serverdomain=tcp_config)
+                print(location,ip,isp,status)
+                re_try_time += 1
+                if re_try_time >= 5:
+                    re_try_time = 0
+                    print(f"Could not connect with ID {nordip}, retrying with new id")
+                    nordip = npx.get_random_proxy()
+            print("Ip Has been changed")
+            
+            for file in robo_files:
+                os.remove(file)
+        
+        robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
+        robot_count = len(robo_files)
+
+def change_ip2(max_robot=1):
+    #This is standalone method to be called from console when code integration is not possible
+    #This method is in entry point is nipchanger
+    
+    #max_robot = int(input("Enter Number of instances you are running : "))
     robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
     robot_count = len(robo_files)
     npx = NProxy(production=False)
