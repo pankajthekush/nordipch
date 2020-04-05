@@ -16,7 +16,7 @@ from nordproxy import NProxy
 import sys
 import telnetlib
 from signal import signal, SIGINT
-
+import getpass
 
 
 
@@ -58,15 +58,25 @@ def management_console(commandname =b'signal SIGTERM\n' ):
     host = 'localhost'
     port = 7505
     
-    try:
-        session = telnetlib.Telnet(host=host,port=port)
-        session.write(commandname)
-    except ConnectionRefusedError:
-        print("management console not running")
-        print("killing openvpn processes , sudo password is required")
-        Popen(['sudo','killall','openvpn'])
-        Popen(['sudo','ip','link','delete','tun0'])
-        
+    if sys_platform == 'linux':
+        try:
+            session = telnetlib.Telnet(host=host,port=port)
+            time.sleep(3) #get the complete connection
+            session.write(commandname)
+            session.close()
+        except ConnectionRefusedError:
+            print("management console not running")
+            print("killing openvpn processes , sudo password is required")
+            Popen(['sudo','killall','openvpn'])
+            Popen(['sudo','ip','link','delete','tun0'])
+    elif 'win' in sys_platform:
+        try:
+            session = telnetlib.Telnet(host=host,port=port)
+            time.sleep(3) #get the complete connection
+            session.write(commandname)
+            session.close()
+        except:
+            print('console not running')
 
 def return_server_domain_name(domain_name):
     domain_tcp = domain_name + '.tcp.ovpn'
@@ -149,24 +159,34 @@ def isconnected():
     
 
 
-def connect(serverid=None,serverdomain = 'ovpn_tcp/al9.nordvpn.com.tcp.ovpn'):
+def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.com.tcp.ovpn')):
     
 
-    print(isconnected())
- 
-    print("Disconnecting..")
-
-    if sys.platform == 'linux':
-        management_console()
+    if os.path.exists('vpnpass.txt'):
+        print('nordvpn password file already exists')
     else:
-        subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True) 
-    sleep(2)
+        print("Credentials file for nordvpn not created")
+        uname = input('Nord username :')
+        pswd = getpass.getpass()
+        with open('vpnpass.txt','w') as f:
+            f.write(uname)
+            f.write('\n')
+            f.write(pswd)
 
+
+ 
+    print(isconnected())
+    print("Disconnecting..")
+    management_console()
+   
     if sys_platform == 'linux':
         open_vpn_command = 'sudo','openvpn','--daemon','--config',serverdomain,'--auth-user-pass','vpnpass.txt'
         subprocess.Popen(open_vpn_command)
-    else:
-       pass
+    elif 'win' in sys.platform:
+        ovpn_file_path = os.path.abspath(serverdomain)
+        pswd_file = os.path.abspath('vpnpass.txt')
+        open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"openvpn --config {ovpn_file_path} --auth-user-pass {pswd_file}"    
+        subprocess.Popen(open_vpn_command)
     #Wait till connected
     location = None
     ip = None
@@ -298,12 +318,13 @@ def change_ip2(max_robot=1):
 
 
 if __name__ == "__main__":
-
-    npx =NProxy(production=False)
-    input('ds')
+    change_ip2()
+    #npx =NProxy(production=False)
+    #input('ds')
     #print(npx.get_random_proxy())
     # print(npx.get_random_proxy())
     #connect()
     #management_console()
     #print(return_server_domain_name())
-    change_ip()
+    #connect()
+    #management_console()
