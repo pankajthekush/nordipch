@@ -15,6 +15,10 @@ import glob
 from nordproxy import NProxy
 import sys
 import telnetlib
+from signal import signal, SIGINT
+
+
+
 
 sys_platform = sys.platform
 current_path = os.path.dirname(os.path.realpath(__file__))
@@ -24,6 +28,29 @@ block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
 
 nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
+
+
+def signal_handler(signal_received,frame):
+    print('hang on...')
+    location,ip,isp,status = isconnected()
+    print(f'connected to {(location,isp)}')
+    user_input = input("terminate current connection ? y/n :")
+    if user_input.upper() == 'Y':
+        management_console()
+        location,ip,isp,status = isconnected()
+        
+        if status == False:
+            print('disconnected')
+        else:
+            print(f'disconnection request sent')
+        sys.exit(0)
+       
+        sys.exit(0)
+    elif user_input.upper() =='N':
+        print('bye')
+        sys.exit(0)
+    exit(0)
+
 
 
 def management_console(commandname =b'signal SIGTERM\n' ):
@@ -49,11 +76,11 @@ def return_server_domain_name(domain_name):
     udP_files = os.listdir('ovpn_udp')
     
     if domain_tcp in tcp_files:
-        #dict_return_files['tcp'] = os.path.join('ovpn_tcp', domain_tcp)
-        pass
+        dict_return_files['tcp'] = os.path.join('ovpn_tcp', domain_tcp)
+        
     if domain_udp in udP_files:
-        #dict_return_files['udp'] = os.path.join( 'ovpn_udp', domain_udp)
-        pass
+        dict_return_files['udp'] = os.path.join( 'ovpn_udp', domain_udp)
+        
     return dict_return_files
 
 
@@ -195,16 +222,20 @@ def change_ip(max_robot=1):
     npx = NProxy(production=False)
     location,ip,isp,status = isconnected()
     while(True):
+        signal(SIGINT, signal_handler)
         print(f"looking:{max_robot} lock(s) found:{robot_count},at {os.getcwd()} Current Connection {(location,ip,isp,status)}")        
         sleep(3)
         if robot_count >= max_robot:
             nordip,norddomain = npx.get_random_proxy()
             dict_config_files = return_server_domain_name(norddomain)
 
-            input(dict_config_files is None)
+            while len(dict_config_files.keys()) == 0:
+                print("invlaid proxy found, getting new one")
+                #get the proxy till matching file with proxy is found
+                nordip,norddomain = npx.get_random_proxy()
+                dict_config_files = return_server_domain_name(norddomain)
 
-            tcp_config,udp_config =  dict_config_files['tcp'],dict_config_files['udp']
-            input(tcp_config)
+            tcp_config,_ =  dict_config_files['tcp'],dict_config_files['udp']
             status = False
             re_try_time = 0
             while not status == True:
@@ -222,45 +253,11 @@ def change_ip(max_robot=1):
         
         robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
         robot_count = len(robo_files)
-        
-
-def change_ip2(max_robot=1):
-    #This method is intended to be integrated to other application
-    #Make sure you call it only once, if you application make concurrent reqeusts it is possible that it
-    #may be called multiple times
-    robo_files = glob.glob(r'C:\temp\*.LOCK')
-    robot_count = len(robo_files)
-    npx = NProxy()
-    location,ip,isp,status = isconnected()
-    while(True):
-        print(f"Asking for {max_robot} lock(s) found {robot_count}, Current Connection {(location,ip,isp,status)}")        
-        sleep(3)
-        if robot_count >= max_robot:
-            nordip = npx.get_random_proxy()
-            status = False
-            re_try_time = 0
-            while not status == True:
-                location,ip,isp,status = connect(serverid=nordip)
-                print(location,ip,isp,status)
-                re_try_time += 1
-                if re_try_time >= 5:
-                    re_try_time = 0
-                    print(f"Could not connect with ID {nordip}, retrying with new id")
-                    nordip = npx.get_random_proxy()
-            print("Ip Has been changed")
-            
-            for file in robo_files:
-                os.remove(file)
-        
-        robo_files = glob.glob(r'C:\temp\*.LOCK')
-        robot_count = len(robo_files)
-        
-
 
 
 if __name__ == "__main__":
 
-    npx =NProxy(production=True)
+    npx =NProxy(production=False)
     input('ds')
     #print(npx.get_random_proxy())
     # print(npx.get_random_proxy())

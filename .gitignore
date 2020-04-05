@@ -131,3 +131,5 @@ nordipch/dbdata.json
 nordip.json
 ua.txt
 vpnpass.txt
+/ovpn_udp
+/ovpn_tcp
