@@ -35,6 +35,9 @@ def management_console(commandname =b'signal SIGTERM\n' ):
         session.write(commandname)
     except ConnectionRefusedError:
         print("management console not running")
+        print("killing openvpn processes , sudo password is required")
+        Popen(['sudo','killall','openvpn'])
+        Popen(['sudo','ip','link','delete','tun0'])
         
 
 def return_server_domain_name(domain_name):
@@ -46,14 +49,11 @@ def return_server_domain_name(domain_name):
     udP_files = os.listdir('ovpn_udp')
     
     if domain_tcp in tcp_files:
-        dict_return_files['tcp'] = os.path.join('ovpn_tcp', domain_tcp)
-        with open(dict_return_files['tcp'],'a') as f:
-            f.write('management localhost 7505')
+        #dict_return_files['tcp'] = os.path.join('ovpn_tcp', domain_tcp)
+        pass
     if domain_udp in udP_files:
-        dict_return_files['udp'] = os.path.join( 'ovpn_udp', domain_udp)
-        with open(dict_return_files['udp'],'a') as f:
-            f.write('management localhost 7505')
-    input(dict_return_files)
+        #dict_return_files['udp'] = os.path.join( 'ovpn_udp', domain_udp)
+        pass
     return dict_return_files
 
 
@@ -135,12 +135,9 @@ def connect(serverid=None,serverdomain = 'ovpn_tcp/al9.nordvpn.com.tcp.ovpn'):
         subprocess.Popen("nordvpn -d",stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True) 
     sleep(2)
 
-    input('disconnexted')
     if sys_platform == 'linux':
         open_vpn_command = 'sudo','openvpn','--daemon','--config',serverdomain,'--auth-user-pass','vpnpass.txt'
-        input(open_vpn_command)
         subprocess.Popen(open_vpn_command)
-        input('Command sent to change ip')
     else:
        pass
     #Wait till connected
@@ -203,6 +200,9 @@ def change_ip(max_robot=1):
         if robot_count >= max_robot:
             nordip,norddomain = npx.get_random_proxy()
             dict_config_files = return_server_domain_name(norddomain)
+
+            input(dict_config_files is None)
+
             tcp_config,udp_config =  dict_config_files['tcp'],dict_config_files['udp']
             input(tcp_config)
             status = False
@@ -260,7 +260,8 @@ def change_ip2(max_robot=1):
 
 if __name__ == "__main__":
 
-    #npx =NProxy(production=False)
+    npx =NProxy(production=True)
+    input('ds')
     #print(npx.get_random_proxy())
     # print(npx.get_random_proxy())
     #connect()

@@ -7,7 +7,7 @@ import time
 import random
 import zipfile
 import shutil
-
+import glob
 
 production = True
 current_path = os.path.dirname(os.path.realpath(__file__))
@@ -31,7 +31,7 @@ class NProxy:
         self.getipfile()
         self.cleanproxylist()
         self.get_ua_file()
-
+        self.download_ovpn_files()
     def download_file(self,link='https://api.nordvpn.com/server',filename = 'nordip.json'):
         print('\n')
         print(f'Downloading {filename}\n')
@@ -133,6 +133,16 @@ class NProxy:
         self.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
         with zipfile.ZipFile('ovpn.zip', 'r') as zip_ref:
             zip_ref.extractall(str(os.getcwd()))
+        tcp_files = glob.glob(os.path.join('ovpn_tcp','*.ovpn'))
+        udP_files = glob.glob(os.path.join('ovpn_udp','*.ovpn'))
+        
+        for file in tcp_files:
+            with open(file,'a') as f:
+                f.write('management localhost 7505')
+        for file in udP_files:
+            with open(file,'a') as f:
+                f.write('management localhost 7505')
+
         os.remove('ovpn.zip')
 
 if __name__ == "__main__":
