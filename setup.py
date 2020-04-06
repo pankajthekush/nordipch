@@ -9,7 +9,7 @@ print(current_path)
 from glob import glob
 setuptools.setup(
     name="nordipch",
-    version="0.8",
+    version="0.9",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     entry_points ={'console_scripts': ['nipchanger=nordipch.nordipch:change_ip']},
@@ -23,7 +23,7 @@ setuptools.setup(
         "Operating System :: Microsoft :: Windows :: Windows 10",
     ],
     python_requires='>=3.6',
-    install_requires=['requests>=2.22.0','psycopg2>=2.8.4'],
+    install_requires=['requests>=2.22.0'],
     include_package_data = True,
     data_files = [(os.path.join(current_path, 'ua'), glob('nordipch/ua/*.csv'))]
 )
