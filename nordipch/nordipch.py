@@ -33,7 +33,7 @@ current_ip_api = "http://myip.dnsomatic.com"
 def signal_handler(signal_received,frame):
     print('\n')
     print('hang on...')
-    location,ip,isp,status = isconnected()
+    location,_,isp,status = isconnected()
     print(f'connected to {(location,isp)}')
     user_input = input("terminate current connection ? y/n :")
     if user_input.upper() == 'Y':
@@ -74,7 +74,14 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             session = telnetlib.Telnet(host=host,port=port)
             time.sleep(3) #get the complete connection
             session.write(commandname)
+            time.sleep(3)
             session.close()
+            open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"taskkill /f /im openvpn.exe"    
+            ps = subprocess.Popen(open_vpn_command)
+            print(ps.communicate())
+
+       
+
         except:
             print('console not running')
 
@@ -187,6 +194,7 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
         pswd_file = os.path.abspath('vpnpass.txt')
         open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"openvpn --config {ovpn_file_path} --auth-user-pass {pswd_file}"    
         subprocess.Popen(open_vpn_command)
+        
     #Wait till connected
     location = None
     ip = None
