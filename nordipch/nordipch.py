@@ -63,6 +63,7 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             session = telnetlib.Telnet(host=host,port=port)
             time.sleep(3) #get the complete connection
             session.write(commandname)
+            time.sleep(3)
             session.close()
         except ConnectionRefusedError:
             print("management console not running")
