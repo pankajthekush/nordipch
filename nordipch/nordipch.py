@@ -26,6 +26,9 @@ last_run_file = os.path.join(current_path,'LASTRUN.txt')
 block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
 
 
+ovpn_tcp = os.path.join(current_path,'ovpn_tcp')
+ovpn_udp = os.path.join(current_path,'ovpn_udp')
+vpn_pass_path = os.path.join(current_path,'vpnpass.txt')
 nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
 
@@ -87,12 +90,16 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             print('console not running')
 
 def return_server_domain_name(domain_name):
+    
+
     domain_tcp = domain_name + '.tcp.ovpn'
+    
+    
     domain_udp = domain_name +'.udp.ovpn'
     dict_return_files = dict()
 
-    tcp_files = os.listdir('ovpn_tcp')
-    udP_files = os.listdir('ovpn_udp')
+    tcp_files = os.listdir(ovpn_tcp)
+    udP_files = os.listdir(ovpn_udp)
     
     if domain_tcp in tcp_files:
         dict_return_files['tcp'] = os.path.join('ovpn_tcp', domain_tcp)
@@ -170,13 +177,13 @@ def isconnected():
 def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.com.tcp.ovpn')):
     
 
-    if os.path.exists('vpnpass.txt'):
+    if os.path.exists(vpn_pass_path):
         print('nordvpn password file already exists')
     else:
         print("Credentials file for nordvpn not created")
         uname = input('Nord username :')
         pswd = getpass.getpass()
-        with open('vpnpass.txt','w') as f:
+        with open(vpn_pass_path,'w') as f:
             f.write(uname)
             f.write('\n')
             f.write(pswd)
@@ -188,14 +195,13 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
     management_console()
    
     if sys_platform == 'linux':
-        open_vpn_command = 'sudo','openvpn','--daemon','--config',serverdomain,'--auth-user-pass','vpnpass.txt'
+        open_vpn_command = 'sudo','openvpn','--daemon','--config',serverdomain,'--auth-user-pass',vpn_pass_path
         subprocess.Popen(open_vpn_command)
     elif 'win' in sys.platform:
-        ovpn_file_path = os.path.abspath(serverdomain)
-        pswd_file = os.path.abspath('vpnpass.txt')
-        open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"openvpn --config {ovpn_file_path} --auth-user-pass {pswd_file}"    
+        ovpn_file_path = os.path.join(current_path,serverdomain)
+        open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"openvpn --config {ovpn_file_path} --auth-user-pass {vpn_pass_path}"    
         subprocess.Popen(open_vpn_command)
-        
+
     #Wait till connected
     location = None
     ip = None
@@ -258,6 +264,7 @@ def change_ip(max_robot=1):
             nordip,norddomain = npx.get_random_proxy()
             dict_config_files = return_server_domain_name(norddomain)
 
+
             while len(dict_config_files.keys()) == 0:
                 print("invlaid proxy found, getting new one")
                 #get the proxy till matching file with proxy is found
@@ -269,6 +276,7 @@ def change_ip(max_robot=1):
             re_try_time = 0
             while not status == True:
                 location,ip,isp,status = connect(serverdomain=tcp_config)
+                input('Connection changed')
                 print(location,ip,isp,status)
                 re_try_time += 1
                 if re_try_time >= 5:
@@ -299,7 +307,6 @@ def change_ip2(max_robot=1):
         if robot_count >= max_robot:
             nordip,norddomain = npx.get_random_proxy()
             dict_config_files = return_server_domain_name(norddomain)
-
             while len(dict_config_files.keys()) == 0:
                 print("invlaid proxy found, getting new one")
                 #get the proxy till matching file with proxy is found
@@ -311,7 +318,7 @@ def change_ip2(max_robot=1):
             re_try_time = 0
             while not status == True:
                 location,ip,isp,status = connect(serverdomain=tcp_config)
-                print(location,ip,isp,status)
+               
                 re_try_time += 1
                 if re_try_time >= 5:
                     re_try_time = 0

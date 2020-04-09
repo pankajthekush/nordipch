@@ -133,3 +133,5 @@ ua.txt
 vpnpass.txt
 /ovpn_udp
 /ovpn_tcp
+/nordipch/ovpn_tcp/
+/nordipch/ovpn_udp/

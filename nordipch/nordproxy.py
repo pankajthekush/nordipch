@@ -11,7 +11,9 @@ import glob
 
 production = True
 current_path = os.path.dirname(os.path.realpath(__file__))
-
+opvn_zip_path = os.path.join(current_path,'ovpn.zip')
+ovpn_tcp = os.path.join(current_path,'ovpn_tcp')
+ovpn_udp = os.path.join(current_path,'ovpn_udp')
 class NProxy:
     def __init__(self,production = True):
         self.headers = {
@@ -28,10 +30,12 @@ class NProxy:
         self.Session = session()
         self.Session.headers = self.headers
         self.jsonnord = None
+        self.download_ovpn_files()
         self.getipfile()
         self.cleanproxylist()
         self.get_ua_file()
-        self.download_ovpn_files()
+        
+  
     def download_file(self,link='https://api.nordvpn.com/server',filename = 'nordip.json'):
         print('\n')
         print(f'Downloading {filename}\n')
@@ -56,9 +60,9 @@ class NProxy:
         for proxy in self.jsonnord:
             flag = proxy['flag']
             load = proxy['load']
-           
             if flag in acceptable_flag and load <= 80:
                 list_proxy.append(proxy)
+
             self.jsonnord = list_proxy
 
 
@@ -66,33 +70,46 @@ class NProxy:
         is_available = os.path.exists('nordip.json')
         
         if is_available and self.production == False:
-            with open('nordip.json','r',encoding='utf-8') as f:
-                jobj = json.load(f)
-                self.jsonnord = jobj
-                return 0
+            self.nordjson()
+            return 0
 
 
         if is_available:
             os.remove('nordip.json')
             self.download_file()
-            with open('nordip.json','r',encoding='utf-8') as f:
-                jobj = json.load(f)
-                self.jsonnord = jobj
+            self.nordjson()
         else:
             self.download_file()
             time.sleep(3)
-            with open('nordip.json','r',encoding='utf-8') as f:
-                jobj = json.load(f)
-                self.jsonnord = jobj
+            self.nordjson()
 
 
     def nordjson(self):
         jobj = None
         with open('nordip.json','r',encoding='utf-8') as f:
             jobj = json.load(f)
+            if len(jobj) < 100:
+                print("bad api endpoint ,falling back to local files")
+                jobj = self.get_local_ovpns()
             self.jsonnord = jobj
-        return jobj
+
     
+        
+    def get_local_ovpns(self):
+        all_tcp = os.listdir(ovpn_tcp)
+        
+        jobjlist = list()
+        for tcp_file in all_tcp:
+            flag = tcp_file[:2].upper()
+            jobj = dict()
+            jobj['id'] = tcp_file
+            jobj['domain'] = str(tcp_file).replace('.tcp.ovpn','')
+            jobj['flag'] = flag
+            jobj['load'] = 10
+            jobjlist.append(jobj)
+        return jobjlist
+        
+
     def get_random_proxy(self):
         dict_proxy = random.choice(self.jsonnord)
         pxy_id = dict_proxy['id']
@@ -116,25 +133,25 @@ class NProxy:
         return ua
     
     def download_ovpn_files(self):
-        tcp_exists = os.path.exists('ovpn_tcp')
-        udp_exists = os.path.exists('ovpn_udp')
+        tcp_exists = os.path.exists(ovpn_tcp)
+        udp_exists = os.path.exists(ovpn_udp)
 
         if tcp_exists and udp_exists and self.production == False:
             return 0
+    
+        if os.path.exists(opvn_zip_path):
+            os.remove(opvn_zip_path)
        
-        if os.path.exists('ovpn.zip'):
-            os.remove('ovpn.zip')
-       
-        if os.path.exists('ovpn_tcp'):
-            shutil.rmtree('ovpn_tcp')
-        if os.path.exists('ovpn_udp'):
-            shutil.rmtree('ovpn_udp')
+        if os.path.exists(ovpn_tcp):
+            shutil.rmtree(ovpn_tcp)
+        if os.path.exists(ovpn_udp):
+            shutil.rmtree(ovpn_udp)
 
-        self.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
-        with zipfile.ZipFile('ovpn.zip', 'r') as zip_ref:
-            zip_ref.extractall(str(os.getcwd()))
-        tcp_files = glob.glob(os.path.join('ovpn_tcp','*.ovpn'))
-        udP_files = glob.glob(os.path.join('ovpn_udp','*.ovpn'))
+        self.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip',opvn_zip_path)
+        with zipfile.ZipFile(opvn_zip_path, 'r') as zip_ref:
+            zip_ref.extractall(current_path)
+        tcp_files = glob.glob(os.path.join(ovpn_tcp,'*.ovpn'))
+        udP_files = glob.glob(os.path.join(ovpn_udp,'*.ovpn'))
         
         for file in tcp_files:
             with open(file,'a') as f:
@@ -143,10 +160,10 @@ class NProxy:
             with open(file,'a') as f:
                 f.write('management localhost 7505')
 
-        os.remove('ovpn.zip')
+        os.remove(opvn_zip_path)
 
 if __name__ == "__main__":
-    npx = NProxy(production=True)
+    npx = NProxy(production=False)
     npx.download_ovpn_files()
     print(npx.get_random_proxy())
     # npx.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
