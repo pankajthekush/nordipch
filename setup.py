@@ -9,7 +9,7 @@ print(current_path)
 from glob import glob
 setuptools.setup(
     name="nordipch",
-    version="1.0",
+    version="1.1",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     entry_points ={'console_scripts': ['nipchanger=nordipch.nordipch:change_ip']},
@@ -21,6 +21,7 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: Microsoft :: Windows :: Windows 10",
+        "Operating System :: POSIX :: Linux"
     ],
     python_requires='>=3.6',
     install_requires=['requests>=2.22.0'],

@@ -14,6 +14,9 @@ current_path = os.path.dirname(os.path.realpath(__file__))
 opvn_zip_path = os.path.join(current_path,'ovpn.zip')
 ovpn_tcp = os.path.join(current_path,'ovpn_tcp')
 ovpn_udp = os.path.join(current_path,'ovpn_udp')
+nord_json_file = os.path.join(current_path,'nordip.json')
+
+
 class NProxy:
     def __init__(self,production = True):
         self.headers = {
@@ -36,7 +39,7 @@ class NProxy:
         self.get_ua_file()
         
   
-    def download_file(self,link='https://api.nordvpn.com/server',filename = 'nordip.json'):
+    def download_file(self,link='https://api.nordvpn.com/server',filename = nord_json_file):
         print('\n')
         print(f'Downloading {filename}\n')
         resp = self.Session.get(link,stream=True)
@@ -67,26 +70,26 @@ class NProxy:
 
 
     def getipfile(self):
-        is_available = os.path.exists('nordip.json')
+        is_available = os.path.exists(nord_json_file)
         
-        if is_available and self.production == False:
-            self.nordjson()
-            return 0
-
+        # if is_available and self.production == False:
+        #     self.nordjson()
+        #     return 0
+        #commenting as i want the file to be downloadedevery time, it runs
 
         if is_available:
-            os.remove('nordip.json')
-            self.download_file()
+            os.remove(nord_json_file)
+            self.download_file(filename=nord_json_file)
             self.nordjson()
         else:
-            self.download_file()
+            self.download_file(filename=nord_json_file)
             time.sleep(3)
             self.nordjson()
 
 
     def nordjson(self):
         jobj = None
-        with open('nordip.json','r',encoding='utf-8') as f:
+        with open(nord_json_file,'r',encoding='utf-8') as f:
             jobj = json.load(f)
             if len(jobj) < 100:
                 print("bad api endpoint ,falling back to local files")

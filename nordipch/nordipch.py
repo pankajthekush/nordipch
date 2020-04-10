@@ -208,7 +208,7 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
     ip = None
     isp = None
     status = None
-    for _ in range(5):
+    for i in range(5):
         sleep(5)
         print('Checking for connection')
         location,ip,isp,status = isconnected()
@@ -250,9 +250,13 @@ def recent_run(time_limit=10):
 
 
 def change_ip2(max_robot=1):
-
-    #this method is to be called within the application
+    #This is standalone method to be called from console when code integration is not possible
+    #This method is in entry point is nipchanger
+    
+    #max_robot = int(input("Enter Number of instances you are running : "))
     #when ipchanger starts change the current ip before proceeding
+
+
 
     robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
    
@@ -306,9 +310,8 @@ def change_ip2(max_robot=1):
 
 
 def change_ip(max_robot=1):
-
-    #This is standalone method to be called from console when code integration is not possible
-    #This method is in entry point is nipchanger
+    #this method is to be called within the application
+    
     max_robot = int(input("Enter Number of instances you are running : "))
     #when ipchanger starts change the current ip before proceeding
 
