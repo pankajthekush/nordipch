@@ -165,10 +165,22 @@ class NProxy:
 
         os.remove(opvn_zip_path)
 
+def get_random_ua2():
+    useragents = list()
+    file_path = os.path.join(current_path,'ua','ua.csv')
+
+    with open(file_path,'r',encoding='utf-8') as f:
+        useragents = [ua.strip() for ua in f.readlines()]
+
+    ua = random.choice(useragents)
+    return ua
+
+
 if __name__ == "__main__":
-    npx = NProxy(production=False)
-    npx.download_ovpn_files()
-    print(npx.get_random_proxy())
-    # npx.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
-    # with zipfile.ZipFile('ovpn.zip', 'r') as zip_ref:
-    #     zip_ref.extractall(str(os.getcwd()))
+    # npx = NProxy(production=False)
+    # npx.download_ovpn_files()
+    # print(npx.get_random_proxy())
+    # # npx.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
+    # # with zipfile.ZipFile('ovpn.zip', 'r') as zip_ref:
+    # #     zip_ref.extractall(str(os.getcwd()))
+    print(get_random_ua2())
