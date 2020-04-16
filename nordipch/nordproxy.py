@@ -171,9 +171,7 @@ def get_random_ua2():
 
     with open(file_path,'r',encoding='utf-8') as f:
         useragents = [ua.strip() for ua in f.readlines()]
-
-    ua = random.choice(useragents)
-    return ua
+    return useragents
 
 
 if __name__ == "__main__":
