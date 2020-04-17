@@ -37,7 +37,7 @@ current_ip_api = "http://myip.dnsomatic.com"
 
 
 
-d_list = ['num_instances','notify_email']
+d_list = ['num_instances','notify_email','upload_function']
 def config_file():
     jobj = None
     config_file_path = os.path.join(Path.home(),'config.json')
@@ -75,11 +75,14 @@ def signal_handler(signal_received,frame):
     print(f'connected to {(location,isp)}')
     management_console()
     location,ip,isp,status = isconnected()
-    
+    notify_email = jobj['notify_email']
     if status == False:
         print('disconnected')
+        subject = f'nipchanger:{sys_name}:closed'
+        send_email2(send_to=notify_email,body='disconnected from vpn',subject=subject)
     else:
-        print(f'disconnection request sent')
+        subject = f'nipchanger:{sys_name}:closed signal sent,not closed'
+        send_email2(send_to=notify_email,body='sent signal for disconnection from vpn',subject=subject)
     sys.exit(0)
 
 def management_console(commandname =b'signal SIGTERM\n' ):
@@ -111,6 +114,11 @@ def management_console(commandname =b'signal SIGTERM\n' ):
 
         except:
             print('console not running')
+    
+    notify_email = jobj['notify_email']
+    subject = f'nipchanger:{sys_name}:openvpn killed'
+    send_email2(send_to=notify_email,body='openvpn.exe killed',subject=subject)
+
 
 def return_server_domain_name(domain_name):
     
@@ -272,6 +280,61 @@ def recent_run(time_limit=10):
             return True
 
 
+def upload_disconnect(configdata):
+    total_upload = 0
+  
+    s3_bucket = configdata['s3_bucket_name']
+    s3_folder = configdata['s3_folder']
+ 
+
+    upload_log= 'uploaded_log.csv'
+ 
+    management_console()
+    all_htmls = glob.glob('*.html')
+    to_upload_list = list()
+    if os.path.exists(upload_log):
+        #get previous upload data , and compare it with current html files
+        #in on filesystem, compare the files , if file exists in csv it means its been uploded already
+        #if not then uplaod it
+        f = open(upload_log,'r',encoding='utf-8')
+        all_files_uploaded = f.read().splitlines()
+        f.close()
+        for file in all_htmls:
+
+            if file in all_files_uploaded:
+                pass
+            else:
+                to_upload_list.append(file)
+        f.close()
+        #If upload list
+        if len(to_upload_list) > 0:
+            
+            f = open(upload_log,'a',encoding='utf-8')
+            for html in to_upload_list:
+                f.write(html)
+                f.write('\n')
+                upload_file(file_name=html,in_sub_folder=s3_folder,
+                                                bucket_name=s3_bucket)
+                print(f'uploadd {html}')
+            f.close()
+            #get count of uploaded html
+            return len(to_upload_list)
+        else:
+            return total_upload
+
+
+    elif not os.path.exists(upload_log):
+        f = open(upload_log,'a',encoding='utf-8')
+        for html in all_htmls:
+            f.write(html)
+            f.write('\n')
+            to_upload_list.append(html)
+            upload_file(file_name=html,in_sub_folder=s3_folder,
+                                            bucket_name=s3_bucket)
+            print(f'uploadd {html} as new')
+        f.close()
+        return len(all_htmls)
+
 
 
 from pathlib import Path
@@ -295,6 +358,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     if inline == False:
         max_robot = int(jobj['num_instances'])
         notify_email = jobj['notify_email']
+        do_upload = jobj['upload_function']
     else:
         #method is being called pythonacly , call should provide the paramters
         #for max_robot and notify_email
@@ -314,7 +378,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     
     for _ in range(max_robot):
         sys_lock_file  = os.path.join(os.getcwd(),('SYS'+str(random.random()).replace('.','') +'.LOCK'))
-        with open(sys_lock_file,'w') as f:
+        with open(sys_lock_file,'w') as _:
             pass
     
     
@@ -323,6 +387,17 @@ def change_ip(max_robot=1,notify_email='',inline=False):
         print(f"looking:{max_robot} lock(s) found:{robot_count},at {os.getcwd()} Current Connection {(location,ip,isp,status)}")        
         sleep(3)
         if robot_count >= max_robot:
+            #ip is going to be changed, upload to s3 before changing ip
+            
+            if do_upload.upper() == 'YES':
+                subject = f'nipchanger:{sys_name}:upload_begin'
+                send_email2(send_to=notify_email,body='uplod begin',subject=subject)
+                upload_count = upload_disconnect(jobj)
+                subject = f'nipchanger:upload:{sys_name}:count:{upload_count}'
+                send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
+
+
+
             nordip,norddomain = npx.get_random_proxy()
             dict_config_files = return_server_domain_name(norddomain)
             while len(dict_config_files.keys()) == 0:
