@@ -137,3 +137,4 @@ vpnpass.txt
 /nordipch/ovpn_udp/
 NSUCCESS.txt
 uploaded_log.csv
+*.html

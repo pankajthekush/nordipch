@@ -21,6 +21,7 @@ import random
 from azwmail.azwmail import send_email2
 from pathlib import Path
 import socket
+from supload.supload import upload_file
 
 sys_platform = sys.platform
 sys_name = socket.gethostname()
