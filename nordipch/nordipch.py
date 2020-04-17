@@ -19,8 +19,11 @@ from signal import signal, SIGINT
 import getpass
 import random
 from azwmail.azwmail import send_email2
+from pathlib import Path
+import socket
 
 sys_platform = sys.platform
+sys_name = socket.gethostname()
 current_path = os.path.dirname(os.path.realpath(__file__))
 last_run_file = os.path.join(current_path,'LASTRUN.txt')
 block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
@@ -33,6 +36,30 @@ nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
 
 
+
+d_list = ['num_instances','notify_email']
+def config_file():
+    config_file_path = os.path.join(Path.home(),'config.json')
+    if os.path.exists(config_file_path):
+        with open(config_file_path,'r',encoding='utf-8') as f:
+            jobj = json.load(f)
+            all_keys = jobj.keys()
+            for element in d_list:
+                if not element in all_keys:
+                    jobj[element] = input(f'enter value for {element} :')
+            return jobj
+    else:
+        jobj = dict()
+        all_keys = jobj.keys()
+        for element in d_list:
+            if not element in all_keys:
+                jobj[element] = input(f'enter value for {element} :')
+        with open(config_file_path,'w',encoding='utf-8') as fp:
+            json.dump(jobj,fp)
+        return jobj
+
+
+jobj = config_file()
 
 
 
@@ -243,7 +270,7 @@ def recent_run(time_limit=10):
 
 
 from pathlib import Path
-def change_ip(max_robot=1,inline_call=True,notify_email=None):
+def change_ip(max_robot=1,notify_email='',inline=False):
     #This is standalone method to be called from console when code integration is not possible
     #This method is in entry point is nipchanger
     
@@ -251,22 +278,22 @@ def change_ip(max_robot=1,inline_call=True,notify_email=None):
     #when ipchanger starts change the current ip before proceeding
     #close connections is already
     management_console()
+
+    #read config file
+
     if os.path.exists('NSUCCESS.txt'):
         try:
             os.remove('NSUCCESS.txt')
         except Exception:
             print('unable to remove NSUCCESS.txt')
-
-
     ipchaner_started = False
-
-    if inline_call == True:
-        pass
+    if inline == False:
+        max_robot = int(jobj['num_instances'])
+        notify_email = jobj['notify_email']
     else:
-        print('calling method without inline')
-        max_robot = int(input("Enter Number of instances you are running : "))
-
-
+        #method is being called pythonacly , call should provide the paramters
+        #for max_robot and notify_email
+        pass
 
 
     robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
@@ -335,7 +362,7 @@ def change_ip(max_robot=1,inline_call=True,notify_email=None):
 
 
 if __name__ == "__main__":
-    change_ip(max_robot=1,inline_call=True,notify_email='pankaj.kushwaha@rho.ai')
+    change_ip()
     #npx =NProxy(production=False)
     #input('ds')
     #print(npx.get_random_proxy())
