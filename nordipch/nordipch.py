@@ -39,6 +39,7 @@ current_ip_api = "http://myip.dnsomatic.com"
 
 d_list = ['num_instances','notify_email']
 def config_file():
+    jobj = None
     config_file_path = os.path.join(Path.home(),'config.json')
     if os.path.exists(config_file_path):
         with open(config_file_path,'r',encoding='utf-8') as f:
@@ -47,7 +48,11 @@ def config_file():
             for element in d_list:
                 if not element in all_keys:
                     jobj[element] = input(f'enter value for {element} :')
-            return jobj
+
+        #put the new data in config file
+        with open(config_file_path,'w',encoding='utf-8') as fp:
+            json.dump(jobj,fp)
+        return jobj
     else:
         jobj = dict()
         all_keys = jobj.keys()
