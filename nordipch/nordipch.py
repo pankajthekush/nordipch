@@ -18,7 +18,7 @@ import telnetlib
 from signal import signal, SIGINT
 import getpass
 import random
-
+from azwmail.azwmail import send_email2
 
 sys_platform = sys.platform
 current_path = os.path.dirname(os.path.realpath(__file__))
@@ -31,6 +31,9 @@ ovpn_udp = os.path.join(current_path,'ovpn_udp')
 vpn_pass_path = os.path.join(current_path,'vpnpass.txt')
 nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
+
+
+
 
 
 def signal_handler(signal_received,frame):
@@ -73,8 +76,6 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"taskkill /f /im openvpn.exe"    
             ps = subprocess.Popen(open_vpn_command)
             print(ps.communicate())
-
-       
 
         except:
             print('console not running')
@@ -242,13 +243,14 @@ def recent_run(time_limit=10):
 
 
 from pathlib import Path
-def change_ip(max_robot=1):
+def change_ip(max_robot=1,inline_call=True,notify_email=None):
     #This is standalone method to be called from console when code integration is not possible
     #This method is in entry point is nipchanger
     
     #max_robot = int(input("Enter Number of instances you are running : "))
     #when ipchanger starts change the current ip before proceeding
-
+    #close connections is already
+    management_console()
     if os.path.exists('NSUCCESS.txt'):
         try:
             os.remove('NSUCCESS.txt')
@@ -257,17 +259,13 @@ def change_ip(max_robot=1):
 
 
     ipchaner_started = False
-    max_robot = None
-    config_file_path = os.path.join(Path.home(),'config.json')
-    if os.path.exists(config_file_path):
-        print('reading local config file')
-        with open(config_file_path,'r',encoding='utf-8') as f:
-            jobj = json.load(f)
-            max_robot = jobj['num_instances']
+
+    if inline_call == True:
+        pass
     else:
-        print('local config file not found')
+        print('calling method without inline')
         max_robot = int(input("Enter Number of instances you are running : "))
-    
+
 
 
 
@@ -316,10 +314,13 @@ def change_ip(max_robot=1):
             if ipchaner_started == False:
                 with open('NSUCCESS.txt','w',encoding='utf-8') as _:
                     ipchaner_started = True
-                    
-                
-            print("Ip Has been changed")
             
+            subject = f'nipchanger:ipchanged:{(tcp_config)}'
+            if notify_email:
+                send_email2(send_to=notify_email,body='ip has been changed',subject=subject)
+            else:
+                pass
+      
             #refresh robo file count
             robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
             for file in robo_files:
@@ -334,7 +335,7 @@ def change_ip(max_robot=1):
 
 
 if __name__ == "__main__":
-    change_ip()
+    change_ip(max_robot=1,inline_call=True,notify_email='pankaj.kushwaha@rho.ai')
     #npx =NProxy(production=False)
     #input('ds')
     #print(npx.get_random_proxy())
