@@ -441,7 +441,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
 
             elif handle_block == 'manual':
                 print('manual captcha solve requested')
-                time.sleep(120)
+                time.sleep(180)
                 #no upload
 
             elif handle_block == 'random':
@@ -466,7 +466,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
                 else:
                     #no upload
                     print('manual captcha solve requested')
-                    time.sleep(120)
+                    time.sleep(180)
             
             #to notify that ipchanger has begun
             if ipchaner_started == False:
