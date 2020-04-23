@@ -113,11 +113,17 @@ class NProxy:
         return jobjlist
         
 
-    def get_random_proxy(self):
+    def get_random_proxy(self,auto_update=True):
         dict_proxy = random.choice(self.jsonnord)
         pxy_id = dict_proxy['id']
         pxy_domain = dict_proxy['domain']
-        self.jsonnord.remove(dict_proxy) #remove this proxy from list
+
+        #do not remove proxy as per request
+        if auto_update:
+            self.jsonnord.remove(dict_proxy) #remove this proxy from list
+        else:
+            pass
+
         self.get_random_ua()
         return pxy_id,pxy_domain
 

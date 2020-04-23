@@ -22,6 +22,9 @@ from azwmail.azwmail import send_email2
 from pathlib import Path
 import socket
 from supload.supload import upload_file
+import random
+
+
 
 sys_platform = sys.platform
 sys_name = socket.gethostname()
@@ -38,7 +41,7 @@ current_ip_api = "http://myip.dnsomatic.com"
 
 
 
-d_list = ['num_instances','notify_email','upload_function']
+d_list = ['num_instances','notify_email','upload_function','handle_block','update_proxy_bucket']
 def config_file():
     jobj = None
     config_file_path = os.path.join(Path.home(),'config.json')
@@ -116,9 +119,9 @@ def management_console(commandname =b'signal SIGTERM\n' ):
         except:
             print('console not running')
     
-    notify_email = jobj['notify_email']
-    subject = f'nipchanger:{sys_name}:openvpn killed'
-    send_email2(send_to=notify_email,body='openvpn.exe killed',subject=subject)
+    # notify_email = jobj['notify_email']
+    # subject = f'nipchanger:{sys_name}:openvpn killed'
+    # send_email2(send_to=notify_email,body='openvpn.exe killed',subject=subject)
 
 
 def return_server_domain_name(domain_name):
@@ -208,6 +211,7 @@ def isconnected():
 
 def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.com.tcp.ovpn')):
     
+
 
     if os.path.exists(vpn_pass_path):
         print('nordvpn password file already exists')
@@ -348,6 +352,10 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     #close connections is already
     management_console()
 
+    handle_block = str(jobj['handle_block'])
+    update_proxy_bucket = bool(jobj['update_proxy_bucket'])
+
+
     #read config file
 
     if os.path.exists('NSUCCESS.txt'):
@@ -390,16 +398,9 @@ def change_ip(max_robot=1,notify_email='',inline=False):
         if robot_count >= max_robot:
             #ip is going to be changed, upload to s3 before changing ip
             
-            if do_upload.upper() == 'YES':
-                subject = f'nipchanger:{sys_name}:upload_begin'
-                send_email2(send_to=notify_email,body='uplod begin',subject=subject)
-                upload_count = upload_disconnect(jobj)
-                subject = f'nipchanger:upload:{sys_name}:count:{upload_count}'
-                send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
+            
 
-
-
-            nordip,norddomain = npx.get_random_proxy()
+            nordip,norddomain = npx.get_random_proxy(auto_update=update_proxy_bucket)
             dict_config_files = return_server_domain_name(norddomain)
             while len(dict_config_files.keys()) == 0:
                 print("invalid proxy found, getting new one")
@@ -410,21 +411,65 @@ def change_ip(max_robot=1,notify_email='',inline=False):
             tcp_config,_ =  dict_config_files['tcp'],dict_config_files['udp']
             status = False
             re_try_time = 0
-            while not status == True:
-                location,ip,isp,status = connect(serverdomain=tcp_config)
-                re_try_time += 1
-                if re_try_time >= 5:
-                    re_try_time = 0
-                    print(f"Could not connect with ID {nordip}, retrying with new id")
-                    nordip = npx.get_random_proxy()
+
+            #handle block 
+            if handle_block =='auto':
+                if do_upload.upper() == 'YES':
+                    # subject = f'nipchanger:{sys_name}:upload_begin'
+                    # send_email2(send_to=notify_email,body='uplod begin',subject=subject)
+                    upload_count = upload_disconnect(jobj)
+                    subject = f'nipchanger:upload:{sys_name}:count:{upload_count}'
+                    send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
+
+                while not status == True:
+                    location,ip,isp,status = connect(serverdomain=tcp_config)
+                    re_try_time += 1
+                    if re_try_time >= 5:
+                        re_try_time = 0
+                        print(f"Could not connect with ID {nordip}, retrying with new id")
+                        nordip = npx.get_random_proxy()
+
+
+            elif handle_block == 'manual':
+                print('sleeping 60s to solve the captcha')
+                time.sleep(60)
+                #no upload
+
+            elif handle_block == 'random':
+                rand_val = bool(random.getrandbits(1))
+                input(rand_val)
+                if rand_val == True:
+                    if do_upload.upper() == 'YES':
+                        # subject = f'nipchanger:{sys_name}:upload_begin'
+                        # send_email2(send_to=notify_email,body='uplod begin',subject=subject)
+                        upload_count = upload_disconnect(jobj)
+                        subject = f'nipchanger:upload:{sys_name}:count:{upload_count}'
+                        send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
+
+                    while not status == True:
+                        location,ip,isp,status = connect(serverdomain=tcp_config)
+                        re_try_time += 1
+                        if re_try_time >= 5:
+                            re_try_time = 0
+                            print(f"Could not connect with ID {nordip}, retrying with new id")
+                            nordip = npx.get_random_proxy()
+                    
+
+                else:
+                    #no upload
+                    print('random ip change requested')
+                    time.sleep(60)
             
             #to notify that ipchanger has begun
             if ipchaner_started == False:
                 with open('NSUCCESS.txt','w',encoding='utf-8') as _:
                     ipchaner_started = True
             
-            subject = f'nipchanger:ipchanged:{(tcp_config)}'
+            with open('curent_ip.txt','w',encoding='utf-8') as f:
+                f.write(tcp_config)
+                
             if notify_email:
+                subject = f'nipchanger:ipchanged:new ip={(tcp_config)}'
                 send_email2(send_to=notify_email,body='ip has been changed',subject=subject)
             else:
                 pass

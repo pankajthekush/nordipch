@@ -138,3 +138,6 @@ vpnpass.txt
 NSUCCESS.txt
 uploaded_log.csv
 *.html
+*.LOCK
+old_ua.txt
+curent_ip.txt
