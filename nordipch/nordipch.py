@@ -397,8 +397,6 @@ def change_ip(max_robot=1,notify_email='',inline=False):
         sleep(3)
         if robot_count >= max_robot:
             #ip is going to be changed, upload to s3 before changing ip
-            
-            
 
             nordip,norddomain = npx.get_random_proxy(auto_update=update_proxy_bucket)
             dict_config_files = return_server_domain_name(norddomain)
@@ -413,7 +411,18 @@ def change_ip(max_robot=1,notify_email='',inline=False):
             re_try_time = 0
 
             #handle block 
-            if handle_block =='auto':
+            if ipchaner_started == False:
+                #first time run
+                print('first tieme run')
+                while not status == True:
+                    location,ip,isp,status = connect(serverdomain=tcp_config)
+                    re_try_time += 1
+                    if re_try_time >= 5:
+                        re_try_time = 0
+                        print(f"Could not connect with ID {nordip}, retrying with new id")
+                        nordip = npx.get_random_proxy()
+
+            elif handle_block =='auto':
                 if do_upload.upper() == 'YES':
                     # subject = f'nipchanger:{sys_name}:upload_begin'
                     # send_email2(send_to=notify_email,body='uplod begin',subject=subject)
@@ -431,13 +440,12 @@ def change_ip(max_robot=1,notify_email='',inline=False):
 
 
             elif handle_block == 'manual':
-                print('sleeping 60s to solve the captcha')
-                time.sleep(60)
+                print('manual captcha solve requested')
+                time.sleep(120)
                 #no upload
 
             elif handle_block == 'random':
                 rand_val = bool(random.getrandbits(1))
-                input(rand_val)
                 if rand_val == True:
                     if do_upload.upper() == 'YES':
                         # subject = f'nipchanger:{sys_name}:upload_begin'
@@ -457,8 +465,8 @@ def change_ip(max_robot=1,notify_email='',inline=False):
 
                 else:
                     #no upload
-                    print('random ip change requested')
-                    time.sleep(60)
+                    print('manual captcha solve requested')
+                    time.sleep(120)
             
             #to notify that ipchanger has begun
             if ipchaner_started == False:
