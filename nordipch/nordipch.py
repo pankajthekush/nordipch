@@ -107,17 +107,23 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             Popen(['sudo','ip','link','delete','tun0'])
     elif 'win' in sys_platform:
         try:
+
             session = telnetlib.Telnet(host=host,port=port)
             time.sleep(3) #get the complete connection
             session.write(commandname)
             time.sleep(3)
             session.close()
-            open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"taskkill /f /im openvpn.exe"    
+            #open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"taskkill /f /im openvpn.exe"    
+            #wait the program to execute itself
+            open_vpn_command = "taskkill /f /im openvpn.exe"    
             ps = subprocess.Popen(open_vpn_command)
             print(ps.communicate())
-
-        except:
-            print('console not running')
+            print('openvpn killed without exeption')
+        except Exception as e:
+            open_vpn_command = "taskkill /f /im openvpn.exe"   
+            ps = subprocess.Popen(open_vpn_command)
+            print(ps.communicate())
+            print('openvpn killed with exeption')
     
     # notify_email = jobj['notify_email']
     # subject = f'nipchanger:{sys_name}:openvpn killed'
