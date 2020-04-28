@@ -117,14 +117,15 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             #open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"taskkill /f /im openvpn.exe"    
             #wait the program to execute itself
             open_vpn_command = "taskkill /f /im openvpn.exe"    
-            ps = subprocess.Popen(open_vpn_command)
-            print(ps.communicate())
-            print('openvpn killed without exeption')
-        except Exception as e:
+            ps = subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL)
+            #print(ps.communicate())
+            print('proxy server disconnected without exception')
+        except Exception:
             open_vpn_command = "taskkill /f /im openvpn.exe"   
-            ps = subprocess.Popen(open_vpn_command)
-            print(ps.communicate())
-            print('openvpn killed with exeption')
+            ps = subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL)
+
+            #print(ps.communicate())
+            print('proxy server disconnected  with exception')
     
     # notify_email = jobj['notify_email']
     # subject = f'nipchanger:{sys_name}:openvpn killed'
@@ -231,9 +232,6 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
             f.write('\n')
             f.write(pswd)
 
-
- 
-    print(isconnected())
     print("Disconnecting..")
     management_console()
    
@@ -245,7 +243,7 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
         ovpn_file_path = os.path.join(current_path,serverdomain)
         time.sleep(5)
         open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"openvpn --config {ovpn_file_path} --auth-user-pass {vpn_pass_path}"
-        subprocess.Popen(open_vpn_command)
+        subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL,stdout=subprocess.DEVNULL)
         
 
     #Wait till connected
@@ -255,7 +253,7 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
     status = None
     for i in range(5):
         sleep(5)
-        print('Checking for connection')
+        print('changing proxy please wait...')
         location,ip,isp,status = isconnected()
         location = location.split(',')[-1]
         print(f'Current Connection {(location,status)}')

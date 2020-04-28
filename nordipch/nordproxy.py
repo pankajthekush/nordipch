@@ -41,7 +41,8 @@ class NProxy:
   
     def download_file(self,link='https://api.nordvpn.com/server',filename = nord_json_file):
         print('\n')
-        print(f'Downloading {filename}\n')
+        print(f'Downloading...')
+
         resp = self.Session.get(link,stream=True)
         handle = open(filename,'wb')
 
