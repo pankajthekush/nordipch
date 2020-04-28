@@ -220,7 +220,6 @@ def isconnected():
 def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.com.tcp.ovpn')):
     
 
-
     if os.path.exists(vpn_pass_path):
         print('retrieving proxy credentials...')
     else:
