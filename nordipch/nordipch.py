@@ -222,9 +222,9 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
 
 
     if os.path.exists(vpn_pass_path):
-        print('nordvpn password file already exists')
+        print('retrieving proxy credentials...')
     else:
-        print("Credentials file for nordvpn not created")
+        print("retrieving proxy credentials...")
         uname = input('Nord username :')
         pswd = getpass.getpass()
         with open(vpn_pass_path,'w') as f:
