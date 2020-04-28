@@ -141,3 +141,4 @@ uploaded_log.csv
 *.LOCK
 old_ua.txt
 curent_ip.txt
+*.db
