@@ -76,7 +76,8 @@ def signal_handler(signal_received,frame):
     print('\n')
     print('hang on...')
     location,_,isp,status = isconnected()
-    print(f'connected to {(location,isp)}')
+    location= location.split(",")[0]
+    print(f'connected to {(location)}')
     management_console()
     location,ip,isp,status = isconnected()
     notify_email = jobj['notify_email']
@@ -256,7 +257,8 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
         sleep(5)
         print('Checking for connection')
         location,ip,isp,status = isconnected()
-        print(f'Current Connection {(location,ip,isp,status)} with ID= {serverid}')
+        location = location.split(',')[-1]
+        print(f'Current Connection {(location,status)}')
         if status == False:  
             location,ip,isp,status = isconnected()
         else:
@@ -387,7 +389,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     robot_count = len(robo_files)
     npx = NProxy(production=False)
     location,ip,isp,status = isconnected()
-    print((location,ip,isp,status))
+    print((location,status))
     print('initial connect seqence started')
     print('creating local .LOCK file')
     
@@ -399,7 +401,9 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     
     while(True):
         signal(SIGINT, signal_handler)
-        print(f"looking:{max_robot} lock(s) found:{robot_count},at {os.getcwd()} Current Connection {(location,ip,isp,status)}")        
+
+        location = location.split(',')[-1]
+        print(f"total robots:{max_robot} blocked robots:{robot_count},current proxy: {(location,status)}")        
         sleep(3)
         if robot_count >= max_robot:
             #ip is going to be changed, upload to s3 before changing ip
