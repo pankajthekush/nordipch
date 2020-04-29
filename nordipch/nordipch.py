@@ -114,10 +114,11 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             session.write(commandname)
             time.sleep(3)
             session.close()
+            #do not kill, it takes time
             #open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"taskkill /f /im openvpn.exe"    
             #wait the program to execute itself
-            open_vpn_command = "taskkill /f /im openvpn.exe"    
-            ps = subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL)
+            # open_vpn_command = "taskkill /f /im openvpn.exe"    
+            # ps = subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL)
             #print(ps.communicate())
             print('proxy server disconnected without exception')
         except Exception:
