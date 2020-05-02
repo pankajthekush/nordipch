@@ -18,9 +18,16 @@ import telnetlib
 from signal import signal, SIGINT
 import getpass
 import random
+from azwmail.azwmail import send_email2
+from pathlib import Path
+import socket
+from supload.supload import upload_file
+import random
+
 
 
 sys_platform = sys.platform
+sys_name = socket.gethostname()
 current_path = os.path.dirname(os.path.realpath(__file__))
 last_run_file = os.path.join(current_path,'LASTRUN.txt')
 block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
@@ -33,29 +40,55 @@ nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
 
 
+
+d_list = ['num_instances','notify_email','upload_function','handle_block','update_proxy_bucket']
+def config_file():
+    jobj = None
+    config_file_path = os.path.join(Path.home(),'config.json')
+    if os.path.exists(config_file_path):
+        with open(config_file_path,'r',encoding='utf-8') as f:
+            jobj = json.load(f)
+            all_keys = jobj.keys()
+            for element in d_list:
+                if not element in all_keys:
+                    jobj[element] = input(f'enter value for {element} :')
+
+        #put the new data in config file
+        with open(config_file_path,'w',encoding='utf-8') as fp:
+            json.dump(jobj,fp)
+        return jobj
+    else:
+        jobj = dict()
+        all_keys = jobj.keys()
+        for element in d_list:
+            if not element in all_keys:
+                jobj[element] = input(f'enter value for {element} :')
+        with open(config_file_path,'w',encoding='utf-8') as fp:
+            json.dump(jobj,fp)
+        return jobj
+
+
+jobj = config_file()
+
+
+
 def signal_handler(signal_received,frame):
     print('\n')
     print('hang on...')
     location,_,isp,status = isconnected()
-    print(f'connected to {(location,isp)}')
-    user_input = input("terminate current connection ? y/n :")
-    if user_input.upper() == 'Y':
-        management_console()
-        location,ip,isp,status = isconnected()
-        
-        if status == False:
-            print('disconnected')
-        else:
-            print(f'disconnection request sent')
-        sys.exit(0)
-       
-        sys.exit(0)
-    elif user_input.upper() =='N':
-        print('bye')
-        sys.exit(0)
-    exit(0)
-
-
+    location= location.split(",")[0]
+    print(f'connected to {(location)}')
+    management_console()
+    location,ip,isp,status = isconnected()
+    notify_email = jobj['notify_email']
+    if status == False:
+        print('disconnected')
+        subject = f'nipchanger:{sys_name}:closed'
+        send_email2(send_to=notify_email,body='disconnected from vpn',subject=subject)
+    else:
+        subject = f'nipchanger:{sys_name}:closed signal sent,not closed'
+        send_email2(send_to=notify_email,body='sent signal for disconnection from vpn',subject=subject)
+    sys.exit(0)
 
 def management_console(commandname =b'signal SIGTERM\n' ):
     host = '127.0.0.1'
@@ -75,19 +108,30 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             Popen(['sudo','ip','link','delete','tun0'])
     elif 'win' in sys_platform:
         try:
+
             session = telnetlib.Telnet(host=host,port=port)
             time.sleep(3) #get the complete connection
             session.write(commandname)
             time.sleep(3)
             session.close()
-            open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"taskkill /f /im openvpn.exe"    
-            ps = subprocess.Popen(open_vpn_command)
-            print(ps.communicate())
+            #do not kill, it takes time
+            #open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"taskkill /f /im openvpn.exe"    
+            #wait the program to execute itself
+            # open_vpn_command = "taskkill /f /im openvpn.exe"    
+            # ps = subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL)
+            #print(ps.communicate())
+            print('proxy server disconnected without exception')
+        except Exception:
+            open_vpn_command = "taskkill /f /im openvpn.exe"   
+            ps = subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL)
 
-       
+            #print(ps.communicate())
+            print('proxy server disconnected  with exception')
+    
+    # notify_email = jobj['notify_email']
+    # subject = f'nipchanger:{sys_name}:openvpn killed'
+    # send_email2(send_to=notify_email,body='openvpn.exe killed',subject=subject)
 
-        except:
-            print('console not running')
 
 def return_server_domain_name(domain_name):
     
@@ -178,9 +222,9 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
     
 
     if os.path.exists(vpn_pass_path):
-        print('nordvpn password file already exists')
+        print('retrieving proxy credentials...')
     else:
-        print("Credentials file for nordvpn not created")
+        print("retrieving proxy credentials...")
         uname = input('Nord username :')
         pswd = getpass.getpass()
         with open(vpn_pass_path,'w') as f:
@@ -188,9 +232,6 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
             f.write('\n')
             f.write(pswd)
 
-
- 
-    print(isconnected())
     print("Disconnecting..")
     management_console()
    
@@ -200,8 +241,10 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
         subprocess.Popen(open_vpn_command)
     elif 'win' in sys.platform:
         ovpn_file_path = os.path.join(current_path,serverdomain)
-        open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"openvpn --config {ovpn_file_path} --auth-user-pass {vpn_pass_path}"    
-        subprocess.Popen(open_vpn_command)
+        time.sleep(5)
+        open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"openvpn --config {ovpn_file_path} --auth-user-pass {vpn_pass_path}"
+        subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL,stdout=subprocess.DEVNULL)
+        
 
     #Wait till connected
     location = None
@@ -210,9 +253,10 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
     status = None
     for i in range(5):
         sleep(5)
-        print('Checking for connection')
+        print('changing proxy please wait...')
         location,ip,isp,status = isconnected()
-        print(f'Current Connection {(location,ip,isp,status)} with ID= {serverid}')
+        location = location.split(',')[-1]
+        print(f'Current Connection {(location,status)}')
         if status == False:  
             location,ip,isp,status = isconnected()
         else:
@@ -247,74 +291,93 @@ def recent_run(time_limit=10):
             return True
 
 
+def upload_disconnect(configdata):
+    total_upload = 0
+  
+    s3_bucket = configdata['s3_bucket_name']
+    s3_folder = configdata['s3_folder']
+ 
+
+    upload_log= 'uploaded_log.csv'
+ 
+    management_console()
+    all_htmls = glob.glob('*.html')
+    to_upload_list = list()
+    if os.path.exists(upload_log):
+        #get previous upload data , and compare it with current html files
+        #in on filesystem, compare the files , if file exists in csv it means its been uploded already
+        #if not then uplaod it
+        f = open(upload_log,'r',encoding='utf-8')
+        all_files_uploaded = f.read().splitlines()
+        f.close()
+        for file in all_htmls:
+
+            if file in all_files_uploaded:
+                pass
+            else:
+                to_upload_list.append(file)
+        f.close()
+        #If upload list
+        if len(to_upload_list) > 0:
+            
+            f = open(upload_log,'a',encoding='utf-8')
+            for html in to_upload_list:
+                f.write(html)
+                f.write('\n')
+                upload_file(file_name=html,in_sub_folder=s3_folder,
+                                                bucket_name=s3_bucket)
+                print(f'uploadd {html}')
+            f.close()
+            #get count of uploaded html
+            return len(to_upload_list)
+        else:
+            return total_upload
 
 
-def change_ip2(max_robot=1):
+    elif not os.path.exists(upload_log):
+        f = open(upload_log,'a',encoding='utf-8')
+        for html in all_htmls:
+            f.write(html)
+            f.write('\n')
+            to_upload_list.append(html)
+            upload_file(file_name=html,in_sub_folder=s3_folder,
+                                            bucket_name=s3_bucket)
+            print(f'uploadd {html} as new')
+        f.close()
+        return len(all_htmls)
+
+
+
+from pathlib import Path
+def change_ip(max_robot=1,notify_email='',inline=False):
     #This is standalone method to be called from console when code integration is not possible
     #This method is in entry point is nipchanger
     
     #max_robot = int(input("Enter Number of instances you are running : "))
     #when ipchanger starts change the current ip before proceeding
+    #close connections is already
+    management_console()
+
+    handle_block = str(jobj['handle_block'])
+    update_proxy_bucket = bool(jobj['update_proxy_bucket'])
 
 
+    #read config file
 
-    robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
-   
-    for file in robo_files:
-        os.remove(file)
-    robot_count = len(robo_files)
-    npx = NProxy(production=False)
-    location,ip,isp,status = isconnected()
-    print((location,ip,isp,status))
-    print('initial connect seqence started')
-    print('creating local .LOCK file')
-    
-    for _ in range(max_robot):
-        sys_lock_file  = os.path.join(os.getcwd(),('SYS'+str(random.random()).replace('.','') +'.LOCK'))
-        with open(sys_lock_file,'w') as f:
-            pass
-    
-    
-    while(True):
-        signal(SIGINT, signal_handler)
-        print(f"looking:{max_robot} lock(s) found:{robot_count},at {os.getcwd()} Current Connection {(location,ip,isp,status)}")        
-        sleep(3)
-        if robot_count >= max_robot:
-            nordip,norddomain = npx.get_random_proxy()
-            dict_config_files = return_server_domain_name(norddomain)
-            while len(dict_config_files.keys()) == 0:
-                print("invlaid proxy found, getting new one")
-                #get the proxy till matching file with proxy is found
-                nordip,norddomain = npx.get_random_proxy()
-                dict_config_files = return_server_domain_name(norddomain)
-
-            tcp_config,_ =  dict_config_files['tcp'],dict_config_files['udp']
-            status = False
-            re_try_time = 0
-            while not status == True:
-                location,ip,isp,status = connect(serverdomain=tcp_config)
-               
-                re_try_time += 1
-                if re_try_time >= 5:
-                    re_try_time = 0
-                    print(f"Could not connect with ID {nordip}, retrying with new id")
-                    nordip = npx.get_random_proxy()
-            print("Ip Has been changed")
-            
-            for file in robo_files:
-                os.remove(file)
-        
-        robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
-        robot_count = len(robo_files)
-
-
-
-def change_ip(max_robot=1):
-    #this method is to be called within the application
-    
-    max_robot = int(input("Enter Number of instances you are running : "))
-    #when ipchanger starts change the current ip before proceeding
-
+    if os.path.exists('NSUCCESS.txt'):
+        try:
+            os.remove('NSUCCESS.txt')
+        except Exception:
+            print('unable to remove NSUCCESS.txt')
+    ipchaner_started = False
+    if inline == False:
+        max_robot = int(jobj['num_instances'])
+        notify_email = jobj['notify_email']
+        do_upload = jobj['upload_function']
+    else:
+        #method is being called pythonacly , call should provide the paramters
+        #for max_robot and notify_email
+        pass
 
 
     robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
@@ -324,25 +387,29 @@ def change_ip(max_robot=1):
     robot_count = len(robo_files)
     npx = NProxy(production=False)
     location,ip,isp,status = isconnected()
-    print((location,ip,isp,status))
+    print((location,status))
     print('initial connect seqence started')
     print('creating local .LOCK file')
     
     for _ in range(max_robot):
         sys_lock_file  = os.path.join(os.getcwd(),('SYS'+str(random.random()).replace('.','') +'.LOCK'))
-        with open(sys_lock_file,'w') as f:
+        with open(sys_lock_file,'w') as _:
             pass
     
     
     while(True):
         signal(SIGINT, signal_handler)
-        print(f"looking:{max_robot} lock(s) found:{robot_count},at {os.getcwd()} Current Connection {(location,ip,isp,status)}")        
+
+        location = location.split(',')[-1]
+        print(f"total robots:{max_robot} blocked robots:{robot_count},current proxy: {(location,status)}")        
         sleep(3)
         if robot_count >= max_robot:
-            nordip,norddomain = npx.get_random_proxy()
+            #ip is going to be changed, upload to s3 before changing ip
+
+            nordip,norddomain = npx.get_random_proxy(auto_update=update_proxy_bucket)
             dict_config_files = return_server_domain_name(norddomain)
             while len(dict_config_files.keys()) == 0:
-                print("invlaid proxy found, getting new one")
+                print("invalid proxy found, getting new one")
                 #get the proxy till matching file with proxy is found
                 nordip,norddomain = npx.get_random_proxy()
                 dict_config_files = return_server_domain_name(norddomain)
@@ -350,18 +417,86 @@ def change_ip(max_robot=1):
             tcp_config,_ =  dict_config_files['tcp'],dict_config_files['udp']
             status = False
             re_try_time = 0
-            while not status == True:
-                location,ip,isp,status = connect(serverdomain=tcp_config)
-               
-                re_try_time += 1
-                if re_try_time >= 5:
-                    re_try_time = 0
-                    print(f"Could not connect with ID {nordip}, retrying with new id")
-                    nordip = npx.get_random_proxy()
-            print("Ip Has been changed")
+
+            #handle block 
+            if ipchaner_started == False:
+                #first time run
+                print('first tieme run')
+                while not status == True:
+                    location,ip,isp,status = connect(serverdomain=tcp_config)
+                    re_try_time += 1
+                    if re_try_time >= 5:
+                        re_try_time = 0
+                        print(f"Could not connect with ID {nordip}, retrying with new id")
+                        nordip = npx.get_random_proxy()
+
+            elif handle_block =='auto':
+                if do_upload.upper() == 'YES':
+                    # subject = f'nipchanger:{sys_name}:upload_begin'
+                    # send_email2(send_to=notify_email,body='uplod begin',subject=subject)
+                    upload_count = upload_disconnect(jobj)
+                    subject = f'nipchanger:upload:{sys_name}:count:{upload_count}'
+                    send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
+
+                while not status == True:
+                    location,ip,isp,status = connect(serverdomain=tcp_config)
+                    re_try_time += 1
+                    if re_try_time >= 5:
+                        re_try_time = 0
+                        print(f"Could not connect with ID {nordip}, retrying with new id")
+                        nordip = npx.get_random_proxy()
+
+
+            elif handle_block == 'manual':
+                print('manual captcha solve requested')
+                time.sleep(180)
+                #no upload
+
+            elif handle_block == 'random':
+                rand_val = bool(random.getrandbits(1))
+                if rand_val == True:
+                    if do_upload.upper() == 'YES':
+                        # subject = f'nipchanger:{sys_name}:upload_begin'
+                        # send_email2(send_to=notify_email,body='uplod begin',subject=subject)
+                        upload_count = upload_disconnect(jobj)
+                        subject = f'nipchanger:upload:{sys_name}:count:{upload_count}'
+                        send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
+
+                    while not status == True:
+                        location,ip,isp,status = connect(serverdomain=tcp_config)
+                        re_try_time += 1
+                        if re_try_time >= 5:
+                            re_try_time = 0
+                            print(f"Could not connect with ID {nordip}, retrying with new id")
+                            nordip = npx.get_random_proxy()
+                    
+
+                else:
+                    #no upload
+                    print('manual captcha solve requested')
+                    time.sleep(180)
             
+            #to notify that ipchanger has begun
+            if ipchaner_started == False:
+                with open('NSUCCESS.txt','w',encoding='utf-8') as _:
+                    ipchaner_started = True
+            
+            with open('curent_ip.txt','w',encoding='utf-8') as f:
+                f.write(tcp_config)
+                
+            if notify_email:
+                subject = f'nipchanger:ipchanged:new ip={(tcp_config)}'
+                send_email2(send_to=notify_email,body='ip has been changed',subject=subject)
+            else:
+                pass
+      
+            #refresh robo file count
+            robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
             for file in robo_files:
-                os.remove(file)
+                try:
+                    os.remove(file)
+                except Exception:
+                    print(f'unable to remove file {file}')
         
         robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
         robot_count = len(robo_files)
@@ -369,7 +504,7 @@ def change_ip(max_robot=1):
 
 
 if __name__ == "__main__":
-    change_ip2()
+    change_ip()
     #npx =NProxy(production=False)
     #input('ds')
     #print(npx.get_random_proxy())

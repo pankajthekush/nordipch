@@ -135,3 +135,10 @@ vpnpass.txt
 /ovpn_tcp
 /nordipch/ovpn_tcp/
 /nordipch/ovpn_udp/
+NSUCCESS.txt
+uploaded_log.csv
+*.html
+*.LOCK
+old_ua.txt
+curent_ip.txt
+*.db

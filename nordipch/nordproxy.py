@@ -41,7 +41,8 @@ class NProxy:
   
     def download_file(self,link='https://api.nordvpn.com/server',filename = nord_json_file):
         print('\n')
-        print(f'Downloading {filename}\n')
+        print(f'Downloading...')
+
         resp = self.Session.get(link,stream=True)
         handle = open(filename,'wb')
 
@@ -113,11 +114,17 @@ class NProxy:
         return jobjlist
         
 
-    def get_random_proxy(self):
+    def get_random_proxy(self,auto_update=True):
         dict_proxy = random.choice(self.jsonnord)
         pxy_id = dict_proxy['id']
         pxy_domain = dict_proxy['domain']
-        self.jsonnord.remove(dict_proxy) #remove this proxy from list
+
+        #do not remove proxy as per request
+        if auto_update:
+            self.jsonnord.remove(dict_proxy) #remove this proxy from list
+        else:
+            pass
+
         self.get_random_ua()
         return pxy_id,pxy_domain
 
@@ -165,10 +172,20 @@ class NProxy:
 
         os.remove(opvn_zip_path)
 
+def get_random_ua2():
+    useragents = list()
+    file_path = os.path.join(current_path,'ua','ua.csv')
+
+    with open(file_path,'r',encoding='utf-8') as f:
+        useragents = [ua.strip() for ua in f.readlines()]
+    return useragents
+
+
 if __name__ == "__main__":
-    npx = NProxy(production=False)
-    npx.download_ovpn_files()
-    print(npx.get_random_proxy())
-    # npx.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
-    # with zipfile.ZipFile('ovpn.zip', 'r') as zip_ref:
-    #     zip_ref.extractall(str(os.getcwd()))
+    # npx = NProxy(production=False)
+    # npx.download_ovpn_files()
+    # print(npx.get_random_proxy())
+    # # npx.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
+    # # with zipfile.ZipFile('ovpn.zip', 'r') as zip_ref:
+    # #     zip_ref.extractall(str(os.getcwd()))
+    print(get_random_ua2())
