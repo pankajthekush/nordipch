@@ -58,7 +58,7 @@ def signal_handler(signal_received,frame):
 
 
 def management_console(commandname =b'signal SIGTERM\n' ):
-    host = 'localhost'
+    host = '127.0.0.1'
     port = 7505
     
     if sys_platform == 'linux':
