@@ -349,16 +349,19 @@ def upload_disconnect(configdata):
 
 from pathlib import Path
 def change_ip(max_robot=1,notify_email='',inline=False):
+
     #This is standalone method to be called from console when code integration is not possible
     #This method is in entry point is nipchanger
     
     #max_robot = int(input("Enter Number of instances you are running : "))
     #when ipchanger starts change the current ip before proceeding
     #close connections is already
+
     if sys_platform == 'linux':
         euid = os.geteuid()
         if euid != 0:
-            print('nipchanger to be run as root')
+            raise PermissionError('nipchanger to be run as root')
+            sys.exit(0)
         
 
 
