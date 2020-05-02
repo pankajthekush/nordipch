@@ -103,9 +103,8 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             session.close()
         except ConnectionRefusedError:
             print("management console not running")
-            print("killing openvpn processes , sudo password is required")
-            Popen(['sudo','killall','openvpn'])
-            Popen(['sudo','ip','link','delete','tun0'])
+            Popen(['killall','openvpn'])
+            Popen(['ip','link','delete','tun0'])
     elif 'win' in sys_platform:
         try:
 
@@ -237,7 +236,7 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
    
     if sys_platform == 'linux':
         ovpn_file_path = os.path.join(current_path,serverdomain)
-        open_vpn_command = 'sudo','openvpn','--daemon','--config',ovpn_file_path,'--auth-user-pass',vpn_pass_path
+        open_vpn_command = 'openvpn','--daemon','--config',ovpn_file_path,'--auth-user-pass',vpn_pass_path
         subprocess.Popen(open_vpn_command)
     elif 'win' in sys.platform:
         ovpn_file_path = os.path.join(current_path,serverdomain)
@@ -356,6 +355,15 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     #max_robot = int(input("Enter Number of instances you are running : "))
     #when ipchanger starts change the current ip before proceeding
     #close connections is already
+    if sys_platform == 'linux':
+        euid = os.geteuid()
+        if euid != 0:
+            print('nipchanger to be run as root')
+        
+
+
+
+
     management_console()
 
     handle_block = str(jobj['handle_block'])
