@@ -9,7 +9,7 @@ print(current_path)
 from glob import glob
 setuptools.setup(
     name="nordipch",
-    version="1.5",
+    version="1.6",
     author="Pankaj Kumar",
     author_email="pankajthekush@gmail.com",
     entry_points ={'console_scripts': ['nipchanger=nordipch.nordipch:change_ip']},
