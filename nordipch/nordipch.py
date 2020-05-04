@@ -48,6 +48,7 @@ def config_file():
     if os.path.exists(config_file_path):
         with open(config_file_path,'r',encoding='utf-8') as f:
             jobj = json.load(f)
+            jobj = jobj[0] #expecting list of dictionary 
             all_keys = jobj.keys()
             for element in d_list:
                 if not element in all_keys:
