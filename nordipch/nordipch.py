@@ -23,7 +23,7 @@ from pathlib import Path
 import socket
 from supload.supload import upload_file
 import random
-
+from pathlib import Path
 
 
 sys_platform = sys.platform
@@ -91,7 +91,7 @@ def signal_handler(signal_received,frame):
     sys.exit(0)
 
 def management_console(commandname =b'signal SIGTERM\n' ):
-    host = '127.0.0.1'
+    host = 'localhost'
     port = 7505
     
     if sys_platform == 'linux':
@@ -107,7 +107,6 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             Popen(['ip','link','delete','tun0'])
     elif 'win' in sys_platform:
         try:
-
             session = telnetlib.Telnet(host=host,port=port)
             time.sleep(3) #get the complete connection
             session.write(commandname)
@@ -123,7 +122,6 @@ def management_console(commandname =b'signal SIGTERM\n' ):
         except Exception:
             open_vpn_command = "taskkill /f /im openvpn.exe"   
             ps = subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL)
-
             #print(ps.communicate())
             print('proxy server disconnected  with exception')
     
@@ -215,11 +213,8 @@ def isconnected():
     location,ip,isp,status = jobj['location'],jobj['ip'],jobj['isp'],jobj['status']
     return location,ip,isp,status
     
-
-
 def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.com.tcp.ovpn')):
     
-
     if os.path.exists(vpn_pass_path):
         print('retrieving proxy credentials...')
     else:
@@ -260,34 +255,9 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
             location,ip,isp,status = isconnected()
         else:
             return (location,ip,isp,status)
-           
-
-    
+            
     location,ip,isp,status = isconnected()
     return (location,ip,isp,status)
-
-
-def write_time():
-    with open(last_run_file,'w') as f:
-        f.write(str(time.time()))
-
-
-def recent_run(time_limit=10):
-
-    current_time = time.time()
-
-    if not os.path.exists(last_run_file):
-        write_time()
-
-    with open(last_run_file,'r') as f:
-        last_time_run = float(f.readline())
-        difference_in_time = current_time -last_time_run
-        total_time = int(difference_in_time)
-        if total_time > time_limit:
-            return False
-        else:
-            print(f"Recent Run last run {total_time}s ago , Threshold time {time_limit}s")
-            return True
 
 
 def upload_disconnect(configdata):
@@ -347,7 +317,6 @@ def upload_disconnect(configdata):
 
 
 
-from pathlib import Path
 def change_ip(max_robot=1,notify_email='',inline=False):
 
     #This is standalone method to be called from console when code integration is not possible
@@ -363,14 +332,10 @@ def change_ip(max_robot=1,notify_email='',inline=False):
             raise PermissionError('nipchanger to be run as root')
             sys.exit(0)
         
-
-
-
-
     management_console()
 
     handle_block = str(jobj['handle_block'])
-    update_proxy_bucket = bool(jobj['update_proxy_bucket'])
+    update_proxy_bucket = (jobj['update_proxy_bucket'])
 
 
     #read config file
@@ -422,7 +387,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
             while len(dict_config_files.keys()) == 0:
                 print("invalid proxy found, getting new one")
                 #get the proxy till matching file with proxy is found
-                nordip,norddomain = npx.get_random_proxy()
+                nordip,norddomain = npx.get_random_proxy(auto_update=update_proxy_bucket)
                 dict_config_files = return_server_domain_name(norddomain)
 
             tcp_config,_ =  dict_config_files['tcp'],dict_config_files['udp']
