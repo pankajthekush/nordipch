@@ -55,7 +55,9 @@ def config_file():
 
         #put the new data in config file
         with open(config_file_path,'w',encoding='utf-8') as fp:
-            json.dump(jobj,fp)
+            list_data = list()
+            list_data.append(jobj)
+            json.dump(list_data,fp)
         return jobj
     else:
         jobj = dict()
