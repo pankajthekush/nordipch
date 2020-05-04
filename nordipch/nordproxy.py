@@ -59,12 +59,25 @@ class NProxy:
                 
     
     def cleanproxylist(self):
-        acceptable_flag = ['US']
+        acceptable_flag = list()
+        max_load = int(input('Please enter maximum load [MAX 100]: '))
+
+        while True:
+            country_flag = input('Enter country flag[ENTER to exit]:')
+            if len(country_flag) == 0:
+                break
+            else:
+                acceptable_flag.append(country_flag.upper())
+        
+        if len(acceptable_flag) == 0:
+            print('no flag provided ,default US')
+            acceptable_flag.append('US')
+
         list_proxy = []
         for proxy in self.jsonnord:
             flag = proxy['flag']
             load = proxy['load']
-            if flag in acceptable_flag and load <= 80:
+            if flag in acceptable_flag and load <= max_load:
                 list_proxy.append(proxy)
 
             self.jsonnord = list_proxy
@@ -114,17 +127,17 @@ class NProxy:
         return jobjlist
         
 
-    def get_random_proxy(self,auto_update=True):
+    def get_random_proxy(self,auto_update='YES'):
         dict_proxy = random.choice(self.jsonnord)
         pxy_id = dict_proxy['id']
         pxy_domain = dict_proxy['domain']
 
         #do not remove proxy as per request
-        if auto_update:
+        if auto_update.upper() == 'YES':
             self.jsonnord.remove(dict_proxy) #remove this proxy from list
         else:
             pass
-
+        print(f'proxy pool count = {len(self.jsonnord)}')
         self.get_random_ua()
         return pxy_id,pxy_domain
 
