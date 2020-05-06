@@ -5,8 +5,9 @@ from pathlib import Path
 current_path =Path.home()
 
 
-d_list = ['dbname','user','host','password','ApplicationName']
+
 def create_db_file():
+    d_list = ['dbname','user','host','password','ApplicationName']
     jobj = None
     config_file_path = os.path.join(current_path,'dbdata.json')
     if os.path.exists(config_file_path):
@@ -61,7 +62,11 @@ def config_file():
         all_keys = jobj.keys()
         for element in d_list:
             if not element in all_keys:
-                jobj[element] = input(f'enter value for {element} :')
+                if 'list' in element:
+                        #if list is expected
+                        jobj[element] = input(f'list for {element} :' ).split(',')
+                else:
+                    jobj[element] = input(f'enter value for {element} :')
         with open(config_file_path,'w',encoding='utf-8') as fp:
             json.dump(jobj,fp)
         return jobj
