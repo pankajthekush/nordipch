@@ -95,6 +95,8 @@ def return_one_random_ua():
     #create local sessio
     localsession = local_session()
     query = localsession.query(UserAgentLocal.user_agent).order_by(func.random()).limit(1).all()
+
+    localsession.close()
     local_engine.dispose()
     result = query[0]
 
