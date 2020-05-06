@@ -8,6 +8,7 @@ import random
 import zipfile
 import shutil
 import glob
+from shelper import config_file
 
 production = True
 current_path = os.path.dirname(os.path.realpath(__file__))
@@ -15,6 +16,7 @@ opvn_zip_path = os.path.join(current_path,'ovpn.zip')
 ovpn_tcp = os.path.join(current_path,'ovpn_tcp')
 ovpn_udp = os.path.join(current_path,'ovpn_udp')
 nord_json_file = os.path.join(current_path,'nordip.json')
+
 
 
 class NProxy:
@@ -27,6 +29,7 @@ class NProxy:
                 'Connection': 'keep-alive',
                 'Upgrade-Insecure-Requests': '1',
                 'Cache-Control': 'max-age=0'}
+        self.config = config_file()
         self.production = production
         self.useragents = self.get_ua_file()
         self.get_random_ua()
@@ -60,18 +63,12 @@ class NProxy:
     
     def cleanproxylist(self):
         acceptable_flag = list()
-        max_load = int(input('Please enter maximum load [MAX 100]: '))
+        max_load = int(self.config['max_load'])
+        acceptable_flag = self.config['list_country_flags']
 
-        while True:
-            country_flag = input('Enter country flag[ENTER to exit]:')
-            if len(country_flag) == 0:
-                break
-            else:
-                acceptable_flag.append(country_flag.upper())
-        
         if len(acceptable_flag) == 0:
-            print('no flag provided ,default US')
-            acceptable_flag.append('US')
+            raise ValueError('need country flags,edit the json now')
+          
 
         list_proxy = []
         for proxy in self.jsonnord:
@@ -79,6 +76,7 @@ class NProxy:
             load = proxy['load']
             if flag in acceptable_flag and load <= max_load:
                 list_proxy.append(proxy)
+   
 
             self.jsonnord = list_proxy
 

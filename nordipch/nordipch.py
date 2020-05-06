@@ -24,7 +24,7 @@ import socket
 from supload.supload import upload_file
 import random
 from pathlib import Path
-
+from shelper import config_file
 
 sys_platform = sys.platform
 sys_name = socket.gethostname()
@@ -40,32 +40,6 @@ nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
 
 
-
-d_list = ['num_instances','notify_email','upload_function','handle_block','update_proxy_bucket']
-def config_file():
-    jobj = None
-    config_file_path = os.path.join(Path.home(),'config.json')
-    if os.path.exists(config_file_path):
-        with open(config_file_path,'r',encoding='utf-8') as f:
-            jobj = json.load(f)
-            all_keys = jobj.keys()
-            for element in d_list:
-                if not element in all_keys:
-                    jobj[element] = input(f'enter value for {element} :')
-
-        #put the new data in config file
-        with open(config_file_path,'w',encoding='utf-8') as fp:
-            json.dump(jobj,fp)
-        return jobj
-    else:
-        jobj = dict()
-        all_keys = jobj.keys()
-        for element in d_list:
-            if not element in all_keys:
-                jobj[element] = input(f'enter value for {element} :')
-        with open(config_file_path,'w',encoding='utf-8') as fp:
-            json.dump(jobj,fp)
-        return jobj
 
 
 jobj = config_file()
@@ -245,6 +219,10 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
     ip = None
     isp = None
     status = None
+    #Try 5 times to change the ip with 5s delay
+    #if not then exit stating  connected to bad ip
+    #need to respawn
+
     for i in range(5):
         sleep(5)
         print('changing proxy please wait...')
@@ -253,6 +231,13 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
         print(f'Current Connection {(location,status)}')
         if status == False:  
             location,ip,isp,status = isconnected()
+            if i == 4:
+                management_console()
+                print('current ip is bad, exiting')
+                notify_email = jobj['notify_email']
+                subject = f'nipchanger:bad connection:restart'
+                send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
+                sys.exit(1)
         else:
             return (location,ip,isp,status)
             
@@ -335,7 +320,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     management_console()
 
     handle_block = str(jobj['handle_block'])
-    update_proxy_bucket = (jobj['update_proxy_bucket'])
+    update_proxy_bucket = (jobj['recycle_proxy'])
 
 
     #read config file
