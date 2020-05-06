@@ -131,7 +131,8 @@ class NProxy:
         pxy_domain = dict_proxy['domain']
 
         #do not remove proxy as per request
-        if auto_update.upper() == 'YES':
+        #if recycle is "NO"
+        if auto_update.upper() == 'NO':
             self.jsonnord.remove(dict_proxy) #remove this proxy from list
         else:
             pass
