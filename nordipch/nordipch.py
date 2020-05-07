@@ -55,6 +55,7 @@ def signal_handler(signal_received,frame):
     management_console()
     location,ip,isp,status = isconnected()
     notify_email = jobj['notify_email']
+
     if status == False:
         print('disconnected')
         subject = f'nipchanger:{sys_name}:closed'
@@ -124,13 +125,13 @@ def return_server_domain_name(domain_name):
         
     return dict_return_files
 
-
 def return_nord_json():
     f = open(os.path.join(current_path,'nordip.json'),'rb')
     f_content = f.read()
     f_content = f_content.decode("utf-8")
     return f_content
     
+
 def  get_current_ip():
     current_api_text = None
     retry_count = 1
@@ -187,6 +188,7 @@ def isconnected():
     location,ip,isp,status = jobj['location'],jobj['ip'],jobj['isp'],jobj['status']
     return location,ip,isp,status
     
+
 def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.com.tcp.ovpn')):
     
     if os.path.exists(vpn_pass_path):
@@ -231,13 +233,13 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
         print(f'Current Connection {(location,status)}')
         if status == False:  
             location,ip,isp,status = isconnected()
-            if i == 4:
-                management_console()
-                print('current ip is bad, exiting')
-                notify_email = jobj['notify_email']
-                subject = f'nipchanger:bad connection:restart'
-                send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
-                sys.exit(1)
+            # if i == 4:
+            #     management_console()
+            #     print('current ip is bad, exiting')
+            #     notify_email = jobj['notify_email']
+            #     subject = f'nipchanger:bad connection:restart'
+            #     send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
+            #     sys.exit(1)
         else:
             return (location,ip,isp,status)
             
@@ -300,6 +302,18 @@ def upload_disconnect(configdata):
         f.close()
         return len(all_htmls)
 
+
+def reurn_ovpn_file(npx:NProxy,update_proxy_bucket):
+    #return valid ovpn file
+    _,norddomain = npx.get_random_proxy(auto_update=update_proxy_bucket)
+    dict_config_files = return_server_domain_name(norddomain)
+    while len(dict_config_files.keys()) == 0:
+        print("invalid proxy found, getting new one")
+        _,norddomain = npx.get_random_proxy(auto_update=update_proxy_bucket)
+        dict_config_files = return_server_domain_name(norddomain)
+
+    tcp_config,_ =  dict_config_files['tcp'],dict_config_files['udp']
+    return tcp_config
 
 
 def change_ip(max_robot=1,notify_email='',inline=False):
@@ -365,93 +379,36 @@ def change_ip(max_robot=1,notify_email='',inline=False):
         print(f"total robots:{max_robot} blocked robots:{robot_count},current proxy: {(location,status)}")        
         sleep(3)
         if robot_count >= max_robot:
-            #ip is going to be changed, upload to s3 before changing ip
-
-            nordip,norddomain = npx.get_random_proxy(auto_update=update_proxy_bucket)
-            dict_config_files = return_server_domain_name(norddomain)
-            while len(dict_config_files.keys()) == 0:
-                print("invalid proxy found, getting new one")
-                #get the proxy till matching file with proxy is found
-                nordip,norddomain = npx.get_random_proxy(auto_update=update_proxy_bucket)
-                dict_config_files = return_server_domain_name(norddomain)
-
-            tcp_config,_ =  dict_config_files['tcp'],dict_config_files['udp']
+            tcp_config =  reurn_ovpn_file(npx=npx,update_proxy_bucket=update_proxy_bucket)
             status = False
-            re_try_time = 0
-
-            #handle block 
-            if ipchaner_started == False:
-                #first time run
-                print('first tieme run')
-                while not status == True:
-                    location,ip,isp,status = connect(serverdomain=tcp_config)
-                    re_try_time += 1
-                    if re_try_time >= 5:
-                        re_try_time = 0
-                        print(f"Could not connect with ID {nordip}, retrying with new id")
-                        nordip = npx.get_random_proxy()
-
-            elif handle_block =='auto':
-                if do_upload.upper() == 'YES':
-                    # subject = f'nipchanger:{sys_name}:upload_begin'
-                    # send_email2(send_to=notify_email,body='uplod begin',subject=subject)
-                    upload_count = upload_disconnect(jobj)
-                    subject = f'nipchanger:upload:{sys_name}:count:{upload_count}'
-                    send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
-
-                while not status == True:
-                    location,ip,isp,status = connect(serverdomain=tcp_config)
-                    re_try_time += 1
-                    if re_try_time >= 5:
-                        re_try_time = 0
-                        print(f"Could not connect with ID {nordip}, retrying with new id")
-                        nordip = npx.get_random_proxy()
-
-
-            elif handle_block == 'manual':
-                print('manual captcha solve requested')
-                time.sleep(180)
-                #no upload
-
-            elif handle_block == 'random':
-                rand_val = bool(random.getrandbits(1))
-                if rand_val == True:
-                    if do_upload.upper() == 'YES':
-                        # subject = f'nipchanger:{sys_name}:upload_begin'
-                        # send_email2(send_to=notify_email,body='uplod begin',subject=subject)
-                        upload_count = upload_disconnect(jobj)
-                        subject = f'nipchanger:upload:{sys_name}:count:{upload_count}'
-                        send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
-
-                    while not status == True:
-                        location,ip,isp,status = connect(serverdomain=tcp_config)
-                        re_try_time += 1
-                        if re_try_time >= 5:
-                            re_try_time = 0
-                            print(f"Could not connect with ID {nordip}, retrying with new id")
-                            nordip = npx.get_random_proxy()
-                    
-
-                else:
-                    #no upload
-                    print('manual captcha solve requested')
-                    time.sleep(180)
             
+          #Try for 5 times by changing new IPs, if ,
+             #   if did not connect withing 5 tries ,send email and exit
+      
+            max_server_tried = 0
+            for i in range(6):
+                input(f'trying {tcp_config}')
+                location,ip,isp,status = connect(serverdomain=tcp_config)
+                if status == True:
+                    break
+                elif status == False:
+                    print('waiting 20s for next try')
+                    tcp_config =  reurn_ovpn_file(npx=npx,update_proxy_bucket=update_proxy_bucket)
+                max_server_tried += 1
+                
+                if max_server_tried >= 5:
+                    print(f'tried {i} ips , could not connect ,exiting')
+                    send_email2(send_to=notify_email,body='disconnected from vpn',subject='max retires meet')
+                    sys.exit(1)
+                
+               
+            
+             
             #to notify that ipchanger has begun
             if ipchaner_started == False:
                 with open('NSUCCESS.txt','w',encoding='utf-8') as _:
                     ipchaner_started = True
-            
-            with open('curent_ip.txt','w',encoding='utf-8') as f:
-                f.write(tcp_config)
-                
-            if notify_email:
-                subject = f'nipchanger:ipchanged:new ip={(tcp_config)}'
-                send_email2(send_to=notify_email,body='ip has been changed',subject=subject)
-            else:
-                pass
-      
-            #refresh robo file count
+
             robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
             for file in robo_files:
                 try:
