@@ -15,7 +15,7 @@ current_path = os.path.dirname(os.path.realpath(__file__))
 opvn_zip_path = os.path.join(current_path,'ovpn.zip')
 ovpn_tcp = os.path.join(current_path,'ovpn_tcp')
 ovpn_udp = os.path.join(current_path,'ovpn_udp')
-nord_json_file = os.path.join(current_path,'nordip.json')
+nord_json_file = 'nordip.json'
 
 
 
