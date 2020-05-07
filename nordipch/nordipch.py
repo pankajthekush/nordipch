@@ -385,7 +385,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
       
             max_server_tried = 0
             for i in range(6):
-                input(f'trying {tcp_config}')
+
                 location,ip,isp,status = connect(serverdomain=tcp_config)
                 if status == True:
                     break
