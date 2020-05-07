@@ -1,15 +1,24 @@
 import os
 import json
 from pathlib import Path
+import sys
 
 current_path =Path.home()
+#sys_platform = sys.platform
+sys_platform = 'linux'
 
-
+#if running inside linux ,do not create config file in home create from whereit is being
+#executed,this is for docker support
 
 def create_db_file():
     d_list = ['dbname','user','host','password','ApplicationName']
     jobj = None
-    config_file_path = os.path.join(current_path,'dbdata.json')
+
+    if sys_platform == 'linux':
+        config_file_path = 'dbdata.json'
+    else:
+        config_file_path = os.path.join(current_path,'dbdata.json')
+
     if os.path.exists(config_file_path):
         with open(config_file_path,'r',encoding='utf-8') as f:
             jobj = json.load(f)
@@ -36,11 +45,15 @@ def create_db_file():
 create_db_file()
 
 
+
 def config_file():
-    d_list = ['num_instances','notify_email','upload_function','handle_block',
-                'recycle_proxy','max_load','list_country_flags']
+    d_list = ['num_instances','notify_email','recycle_proxy','min_load','max_load','list_country_flags']
+
     jobj = None
-    config_file_path = os.path.join(Path.home(),'config.json')
+    if sys_platform =='linux':
+        config_file_path = 'config.json'
+    else:
+        config_file_path = os.path.join(Path.home(),'config.json')
     if os.path.exists(config_file_path):
         with open(config_file_path,'r',encoding='utf-8') as f:
             jobj = json.load(f)
@@ -72,13 +85,14 @@ def config_file():
         return jobj
 
 
-
-
-
-
 def pgconnstring():
+    if sys_platform == 'linux':
+        dbdata_file = 'dbdata.json'
+    else:
+        dbdata_file = os.path.join(current_path,'dbdata.json')
+
     connstring = None
-    dbdata_file = os.path.join(current_path,'dbdata.json')
+
     with open(dbdata_file,'r',encoding='utf-8') as f:
         jobj = json.load(f)
         user = jobj['user']

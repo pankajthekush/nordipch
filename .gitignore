@@ -142,3 +142,4 @@ uploaded_log.csv
 old_ua.txt
 curent_ip.txt
 *.db
+*.json

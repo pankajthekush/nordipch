@@ -63,22 +63,22 @@ class NProxy:
     
     def cleanproxylist(self):
         acceptable_flag = list()
+        min_load = int(self.config['min_load'])
         max_load = int(self.config['max_load'])
-        acceptable_flag = self.config['list_country_flags']
-
+        list_countries = self.config['list_country_flags']
+        acceptable_flag = [cnt.upper() for cnt in list_countries]
         if len(acceptable_flag) == 0:
             raise ValueError('need country flags,edit the json now')
-          
 
         list_proxy = []
         for proxy in self.jsonnord:
             flag = proxy['flag']
             load = proxy['load']
-            if flag.upper() in acceptable_flag and load <= max_load:
+   
+            if flag.upper() in acceptable_flag and load >= min_load and load <= max_load:
                 list_proxy.append(proxy)
    
-
-            self.jsonnord = list_proxy
+        self.jsonnord = list_proxy
 
 
     def getipfile(self):

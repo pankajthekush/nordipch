@@ -333,7 +333,6 @@ def change_ip(max_robot=1,notify_email='',inline=False):
         
     management_console()
 
-    handle_block = str(jobj['handle_block'])
     update_proxy_bucket = (jobj['recycle_proxy'])
 
 
@@ -348,7 +347,6 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     if inline == False:
         max_robot = int(jobj['num_instances'])
         notify_email = jobj['notify_email']
-        do_upload = jobj['upload_function']
     else:
         #method is being called pythonacly , call should provide the paramters
         #for max_robot and notify_email
