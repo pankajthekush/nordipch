@@ -54,6 +54,7 @@ def config_file():
         config_file_path = 'config.json'
     else:
         config_file_path = os.path.join(Path.home(),'config.json')
+    
     if os.path.exists(config_file_path):
         with open(config_file_path,'r',encoding='utf-8') as f:
             jobj = json.load(f)
