@@ -182,6 +182,11 @@ class NProxy:
         for file in udP_files:
             with open(file,'a') as f:
                 f.write('management localhost 7505')
+                if sys.platform == 'linux':
+                    #in case of linux
+                    f.write('script-security 2')
+                    f.write('up /etc/openvpn/update-resolv-conf')
+                    f.write('down /etc/openvpn/update-resolv-conf')
 
         os.remove(opvn_zip_path)
 
