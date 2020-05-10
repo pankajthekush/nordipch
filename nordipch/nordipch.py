@@ -59,15 +59,7 @@ def signal_handler(signal_received,frame):
     management_console()
     location,ip,isp,status = isconnected()
     notify_email = jobj['notify_email']
-
-    if status == False:
-        print('disconnected')
-        subject = f'nipchanger:{sys_name}:closed'
-        send_email2(send_to=notify_email,body='disconnected from vpn',subject=subject)
-    else:
-        subject = f'nipchanger:{sys_name}:closed signal sent,not closed'
-        send_email2(send_to=notify_email,body='sent signal for disconnection from vpn',subject=subject)
-    sys.exit(0)
+    sys.exit(1)
 
 def management_console(commandname =b'signal SIGTERM\n' ):
     host = 'localhost'
