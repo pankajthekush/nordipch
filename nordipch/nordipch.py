@@ -172,7 +172,7 @@ def isconnected():
     'Cache-Control': 'max-age=0' }
     try:
         print('rquesting connect status')
-        r = requests.get(statuslink,headers=headers)
+        r = requests.get(statuslink,headers=headers,timeout=2)
     except:
         print('error occured during norvpn connection rquest')
         location,ip,isp,status = 'notfound','notfound','notfound',False
