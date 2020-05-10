@@ -59,6 +59,7 @@ def signal_handler(signal_received,frame):
     management_console()
     location,ip,isp,status = isconnected()
     notify_email = jobj['notify_email']
+    send_email2(send_to=notify_email,body='disconnect',subject='closed')
     sys.exit(1)
 
 def management_console(commandname =b'signal SIGTERM\n' ):
