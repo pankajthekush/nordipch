@@ -182,8 +182,10 @@ def isconnected():
     'Referer': 'https://nordvpn.com/servers',
     'Cache-Control': 'max-age=0' }
     try:
+        print('rquesting connect status')
         r = requests.get(statuslink,headers=headers)
     except:
+        print('error occured during norvpn connection rquest')
         location,ip,isp,status = 'notfound','notfound','notfound',False
         return location,ip,isp,status
 
@@ -235,19 +237,15 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
         location,ip,isp,status = isconnected()
         location = location.split(',')[-1]
         print(f'Current Connection {(location,status)}')
-        if status == False:  
+        if status == False: 
+            print('not connected')
             location,ip,isp,status = isconnected()
-            # if i == 4:
-            #     management_console()
-            #     print('current ip is bad, exiting')
-            #     notify_email = jobj['notify_email']
-            #     subject = f'nipchanger:bad connection:restart'
-            #     send_email2(send_to=notify_email,body='uploaded to s3',subject=subject,attacment_dir= None)
-            #     sys.exit(1)
         else:
+            print('connected, going out')
             return (location,ip,isp,status)
-            
+    
     location,ip,isp,status = isconnected()
+    print('all iteraton complete ,exiting')
     return (location,ip,isp,status)
 
 
