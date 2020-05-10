@@ -104,6 +104,29 @@ def return_one_random_ua():
     return ua
 
 
+def return_all_ua():
+    #local engine and session
+    local_engine = create_engine(conn_string_local)
+    local_session = sessionmaker(local_engine)
+
+    #crate model
+    table_objects = [Base.metadata.tables["useragent"]]
+    Base.metadata.create_all(local_engine,tables=table_objects)
+
+    #create local sessio
+    localsession = local_session()
+    query = localsession.query(UserAgentLocal.user_agent).order_by(func.random()).all()
+
+    localsession.close()
+    local_engine.dispose()
+
+    list_ua = [ua[0] for ua in list(query)]
+
+    ua = list_ua
+    return ua
+
+
+
 if __name__ == "__main__":
-    print(return_one_random_ua())
+    print(return_all_ua())
 #now a function to query local db and return a random user_agent
