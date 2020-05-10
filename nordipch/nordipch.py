@@ -51,15 +51,7 @@ jobj = config_file()
 
 
 def signal_handler(signal_received,frame):
-    print('\n')
-    print('hang on...')
-    location,_,isp,status = isconnected()
-    location= location.split(",")[0]
-    print(f'connected to {(location)}')
     management_console()
-    location,ip,isp,status = isconnected()
-    notify_email = jobj['notify_email']
-    send_email2(send_to=notify_email,body='disconnect',subject='closed')
     sys.exit(1)
 
 def management_console(commandname =b'signal SIGTERM\n' ):
