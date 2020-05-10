@@ -35,7 +35,11 @@ block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
 
 ovpn_tcp = os.path.join(current_path,'ovpn_tcp')
 ovpn_udp = os.path.join(current_path,'ovpn_udp')
-vpn_pass_path = os.path.join(current_path,'vpnpass.txt')
+
+if sys.platform == 'linux':
+    vpn_pass_path = 'vpnpass.txt'
+else:
+    vpn_pass_path = os.path.join(current_path,'vpnpass.txt')
 nord_api = "https://api.nordvpn.com/server"
 current_ip_api = "http://myip.dnsomatic.com"
 
