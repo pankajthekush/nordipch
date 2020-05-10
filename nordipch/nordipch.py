@@ -382,6 +382,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
             for i in range(6):
 
                 location,ip,isp,status = connect(serverdomain=tcp_config)
+                print(f'Tried {tcp_config}')
                 if status == True:
                     break
                 elif status == False:
