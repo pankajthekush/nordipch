@@ -63,7 +63,10 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             session = telnetlib.Telnet(host=host,port=port)
             time.sleep(3) #get the complete connection
             session.write(commandname)
-            Popen(['killall','openvpn'])
+            drun = Popen('killall openvpn',shell=True,stdout=PIPE,stderr=PIPE)
+            stdout,strerr = drun.communicate()
+            print(stdout)
+            print(strerr)
             time.sleep(3)
             session.close()
         except ConnectionRefusedError:
