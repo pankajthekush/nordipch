@@ -9,6 +9,9 @@ import zipfile
 import shutil
 import glob
 from shelper import config_file
+from itertools import cycle, groupby, accumulate
+import socket
+import ipaddress
 
 production = True
 current_path = os.path.dirname(os.path.realpath(__file__))
@@ -38,8 +41,12 @@ class NProxy:
         self.jsonnord = None
         self.download_ovpn_files()
         self.getipfile()
+        self.nordjson()
         self.cleanproxylist()
         self.get_ua_file()
+        self.groupedproxies = None
+        self.recyle_ip = self.config['recycle_proxy'].upper()
+        self.group_proxies()
         
   
     def download_file(self,link='https://api.nordvpn.com/server',filename = nord_json_file):
@@ -75,7 +82,6 @@ class NProxy:
         for proxy in self.jsonnord:
             flag = proxy['flag']
             load = proxy['load']
-   
             if flag.upper() in acceptable_flag and load >= min_load and load <= max_load:
                 list_proxy.append(proxy)
    
@@ -93,11 +99,12 @@ class NProxy:
         if is_available:
             os.remove(nord_json_file)
             self.download_file(filename=nord_json_file)
-            self.nordjson()
+            time.sleep(3)
+
         else:
             self.download_file(filename=nord_json_file)
             time.sleep(3)
-            self.nordjson()
+
 
 
     def nordjson(self):
@@ -127,18 +134,8 @@ class NProxy:
         
 
     def get_random_proxy(self,auto_update='YES'):
-        dict_proxy = random.choice(self.jsonnord)
-        pxy_id = dict_proxy['id']
-        pxy_domain = dict_proxy['domain']
-
-        #do not remove proxy as per request
-        #if recycle is "NO"
-        if auto_update.upper() == 'NO':
-            self.jsonnord.remove(dict_proxy) #remove this proxy from list
-        else:
-            pass
-        print(f'proxy pool count = {len(self.jsonnord)}')
-        self.get_random_ua()
+        
+        pxy_id,pxy_domain = next(self.groupedproxies)
         return pxy_id,pxy_domain
 
     def get_ua_file(self):
@@ -150,8 +147,6 @@ class NProxy:
     
     def get_random_ua(self):
         ua = random.choice(self.useragents)
-        with open('ua.txt','w',encoding='utf-8') as f:
-            f.write(ua)
         self.useragents.remove(ua)
         return ua
     
@@ -199,20 +194,69 @@ class NProxy:
 
         os.remove(opvn_zip_path)
 
-def get_random_ua2():
-    useragents = list()
-    file_path = os.path.join(current_path,'ua','ua.csv')
-
-    with open(file_path,'r',encoding='utf-8') as f:
-        useragents = [ua.strip() for ua in f.readlines()]
-    return useragents
 
 
+    def group_proxies(self):
+        list_grouped_ips = list()
+        all_ip_list = list()
+       
+        ip_list = list()
+    
+        for proxy in self.jsonnord:
+            ip_addr = proxy['ip_address']
+            ip_list.append(ip_addr)
+          
+        #https://stackoverflow.com/a/6545090/3025905
+        #sorted_ip = sorted(ip_list, key=lambda item: socket.inet_aton(item))
+
+        #https://www.lesinskis.com/python_sorting_IP_addresses.html
+        sorted_ip = sorted(ip_list,key=ipaddress.IPv4Address)
+        
+        #group now
+        for group,ips in groupby(sorted_ip,key=get_network_ip):
+            dictgroup =dict()
+            ips = list(ips)
+            random.shuffle(ips)
+            dictgroup[group] =  ips
+            list_grouped_ips.append(dictgroup)
+        
+        random.shuffle(list_grouped_ips)
+        for item in list_grouped_ips:
+            for _,v in item.items():
+                for ip in v:
+                    for proxy in self.jsonnord:
+                        ip_addr = proxy['ip_address']
+                        pxy_domain = proxy['domain']
+                        if ip_addr == ip:
+                            tuple_data = (ip,pxy_domain)
+                            all_ip_list.append(tuple_data)
+                            break
+        if self.recyle_ip == 'YES':
+            all_ip_list = cycle(all_ip_list)
+        else:
+            all_ip_list = iter(all_ip_list)
+        self.groupedproxies = all_ip_list
+           
+
+
+def get_network_ip(ip):
+    ip_with_subnet = ip+'/'+'255.255.255.0'
+    net = ipaddress.ip_network(ip_with_subnet, strict=False)
+    network_ip = (net.network_address)
+    return network_ip
+
+
+
+
+import time
 if __name__ == "__main__":
-    # npx = NProxy(production=False)
+    npx = NProxy(production=False)
     # npx.download_ovpn_files()
     # print(npx.get_random_proxy())
     # # npx.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
     # # with zipfile.ZipFile('ovpn.zip', 'r') as zip_ref:
     # #     zip_ref.extractall(str(os.getcwd()))
-    print(get_random_ua2())
+
+    while True:
+        print(npx.get_random_proxy())
+        time.sleep(1)

@@ -1,12 +1,12 @@
 
 from shelper import pgconnstring
-
 from sqlalchemy.sql.expression import func,select
 from sqlalchemy import MetaData
 from sqlalchemy import Column,String,Table
 from sqlalchemy.ext.declarative import declarative_base 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from itertools import cycle
 
 #code start
 #https://stackoverflow.com/questions/21770829/sqlalchemy-copy-schema-and-data-of-subquery-to-another-database
@@ -106,6 +106,7 @@ def return_one_random_ua():
 
 def return_all_ua():
     #local engine and session
+
     local_engine = create_engine(conn_string_local)
     local_session = sessionmaker(local_engine)
 
@@ -121,12 +122,13 @@ def return_all_ua():
     local_engine.dispose()
 
     list_ua = [ua[0] for ua in list(query)]
-
-    ua = list_ua
+    ua = cycle(list_ua)
     return ua
 
 
 
 if __name__ == "__main__":
-    print(return_all_ua())
+    copy_remote_ua_to_local()
+    ad = return_all_ua()
+    print(next(ad))
 #now a function to query local db and return a random user_agent
