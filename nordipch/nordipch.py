@@ -376,14 +376,16 @@ def change_ip(max_robot=1,notify_email='',inline=False):
       
             max_server_tried = 0
             for i in range(6):
-
+                print(f'connecting to {tcp_config}')
                 location,ip,isp,status = connect(serverdomain=tcp_config)
                 print(f'Tried {tcp_config}')
                 if status == True:
                     break
                 elif status == False:
                     print('waiting 20s for next try')
+                    sleep(20)
                     tcp_config =  reurn_ovpn_file(npx=npx,update_proxy_bucket=update_proxy_bucket)
+
                 max_server_tried += 1
                 
                 if max_server_tried >= 5:

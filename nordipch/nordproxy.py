@@ -34,8 +34,6 @@ class NProxy:
                 'Cache-Control': 'max-age=0'}
         self.config = config_file()
         self.production = production
-        self.useragents = self.get_ua_file()
-        self.get_random_ua()
         self.Session = session()
         self.Session.headers = self.headers
         self.jsonnord = None
@@ -43,7 +41,6 @@ class NProxy:
         self.getipfile()
         self.nordjson()
         self.cleanproxylist()
-        self.get_ua_file()
         self.groupedproxies = None
         self.recyle_ip = self.config['recycle_proxy'].upper()
         self.group_proxies()
@@ -138,17 +135,7 @@ class NProxy:
         pxy_id,pxy_domain = next(self.groupedproxies)
         return pxy_id,pxy_domain
 
-    def get_ua_file(self):
-        useragents = list()
-        file_path = os.path.join(current_path,'ua','ua.csv')
-        with open(file_path,'r',encoding='utf-8') as f:
-            useragents = [ua.strip() for ua in f.readlines()]
-        return useragents
     
-    def get_random_ua(self):
-        ua = random.choice(self.useragents)
-        self.useragents.remove(ua)
-        return ua
     
     def download_ovpn_files(self):
         tcp_exists = os.path.exists(ovpn_tcp)
