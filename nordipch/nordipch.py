@@ -72,7 +72,7 @@ def management_console(commandname =b'signal SIGTERM\n' ):
         except ConnectionRefusedError:
             print("management console not running")
             Popen(['killall','openvpn'])
-            Popen(['ip','link','delete','tun0'])
+
     elif 'win' in sys_platform:
         try:
             session = telnetlib.Telnet(host=host,port=port)
