@@ -51,8 +51,7 @@ jobj = config_file()
 
 
 def signal_handler(signal_received,frame):
-    #management_console()
-    #do nothing for now , let the user worry about existing connection
+    management_console()
     sys.exit(1)
 
 def management_console(commandname =b'signal SIGTERM\n' ):
@@ -174,7 +173,7 @@ def isconnected():
 
     while True:
         try:
-            r = requests.get(statuslink,headers=headers,timeout=2)
+            r = requests.get(statuslink,headers=headers,timeout=10)
         except Exception as e:
             print(e)
             location,ip,isp,status = 'notfound','notfound','notfound',False
@@ -210,11 +209,13 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
         ovpn_file_path = os.path.join(current_path,serverdomain)
         open_vpn_command = 'openvpn','--daemon','--config',ovpn_file_path,'--auth-user-pass',vpn_pass_path
         subprocess.Popen(open_vpn_command)
+        sleep(5)
     elif 'win' in sys.platform:
         ovpn_file_path = os.path.join(current_path,serverdomain)
         time.sleep(5)
         open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"openvpn --config {ovpn_file_path} --auth-user-pass {vpn_pass_path}"
         subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL,stdout=subprocess.DEVNULL)
+        sleep(5)
         
 
     #Wait till connected
