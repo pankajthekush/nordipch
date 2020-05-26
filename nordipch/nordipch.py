@@ -177,6 +177,10 @@ def isconnected():
         except Exception as e:
             print(e)
             location,ip,isp,status = 'notfound','notfound','notfound',False
+            #sleeping because if timeout error occurs
+            #that means connection is in progress
+            sleep(10)
+
             return location,ip,isp,status
             
         jobj = json.loads(r.text)
