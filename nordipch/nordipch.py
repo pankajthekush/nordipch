@@ -244,6 +244,8 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
     
     location,ip,isp,status = isconnected()
     print(f'failed to connect to {serverdomain}')
+    sleep(20)
+    #wait for sometime before trying again
     return (location,ip,isp,status)
 
 
