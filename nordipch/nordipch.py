@@ -51,7 +51,8 @@ jobj = config_file()
 
 
 def signal_handler(signal_received,frame):
-    management_console()
+    #management_console()
+    #do nothing for now , let the user worry about existing connection
     sys.exit(1)
 
 def management_console(commandname =b'signal SIGTERM\n' ):
@@ -64,9 +65,9 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             time.sleep(3) #get the complete connection
             session.write(commandname)
             drun = Popen('killall openvpn',shell=True,stdout=PIPE,stderr=PIPE)
-            stdout,strerr = drun.communicate()
-            print(stdout)
-            print(strerr)
+            # stdout,strerr = drun.communicate()
+            # print(stdout)
+            # print(strerr)
             time.sleep(3)
             session.close()
         except ConnectionRefusedError:
@@ -170,18 +171,23 @@ def isconnected():
     'X-Requested-With': 'XMLHttpRequest',
     'Referer': 'https://nordvpn.com/servers',
     'Cache-Control': 'max-age=0' }
-    try:
-        print('rquesting connect status')
-        r = requests.get(statuslink,headers=headers,timeout=2)
-    except:
-        print('error occured during norvpn connection rquest')
-        location,ip,isp,status = 'notfound','notfound','notfound',False
-        return location,ip,isp,status
 
-
-    jobj = json.loads(r.text)
-    location,ip,isp,status = jobj['location'],jobj['ip'],jobj['isp'],jobj['status']
-    return location,ip,isp,status
+    while True:
+        try:
+            r = requests.get(statuslink,headers=headers,timeout=2)
+        except Exception as e:
+            print(e)
+            location,ip,isp,status = 'notfound','notfound','notfound',False
+            return location,ip,isp,status
+            
+        jobj = json.loads(r.text)
+        location,ip,isp,status = jobj['location'],jobj['ip'],jobj['isp'],jobj['status']
+        if location == 'notfound':
+            pass
+            sleep(10)
+            #try again and get the location
+        else:
+            return location,ip,isp,status
     
 
 def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.com.tcp.ovpn')):
@@ -222,19 +228,17 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
 
     for i in range(5):
         sleep(5)
-        print('changing proxy please wait...')
+
         location,ip,isp,status = isconnected()
         location = location.split(',')[-1]
         print(f'Current Connection {(location,status)}')
         if status == False: 
-            print('not connected')
             location,ip,isp,status = isconnected()
         else:
-            print('connected, going out')
             return (location,ip,isp,status)
     
     location,ip,isp,status = isconnected()
-    print('all iteraton complete ,exiting')
+    print(f'failed to connect to {serverdomain}')
     return (location,ip,isp,status)
 
 
@@ -360,12 +364,12 @@ def change_ip(max_robot=1,notify_email='',inline=False):
         with open(sys_lock_file,'w') as _:
             pass
     
-    
+    current_config_file = None
     while(True):
         signal(SIGINT, signal_handler)
 
         location = location.split(',')[-1]
-        print(f"total robots:{max_robot} blocked robots:{robot_count},current proxy: {(location,status)}")        
+        print(f"{max_robot}:{robot_count},proxy: {(current_config_file)}")        
         sleep(3)
         if robot_count >= max_robot:
             tcp_config =  reurn_ovpn_file(npx=npx,update_proxy_bucket=update_proxy_bucket)
@@ -375,16 +379,16 @@ def change_ip(max_robot=1,notify_email='',inline=False):
              #   if did not connect withing 5 tries ,send email and exit
       
             max_server_tried = 0
+            print(f'connecting to {tcp_config}')
             for i in range(6):
-                print(f'connecting to {tcp_config}')
                 location,ip,isp,status = connect(serverdomain=tcp_config)
-                print(f'Tried {tcp_config}')
                 if status == True:
                     break
                 elif status == False:
-                    print('waiting 20s for next try')
-                    sleep(20)
+                    print(f'failed to connect to {tcp_config}')
                     tcp_config =  reurn_ovpn_file(npx=npx,update_proxy_bucket=update_proxy_bucket)
+                    print(f'retrying {tcp_config}')
+                    
 
                 max_server_tried += 1
                 
@@ -397,6 +401,12 @@ def change_ip(max_robot=1,notify_email='',inline=False):
             
              
             #to notify that ipchanger has begun
+            #write current ip to a file
+            location,ip,isp,status = isconnected()
+            current_config_file = tcp_config
+            with open('current_ip','w',encoding='utf-8') as f:
+                f.write(' '.join(str(s) for s in (location,ip,isp,tcp_config)))
+
             if ipchaner_started == False:
                 with open('NSUCCESS.txt','w',encoding='utf-8') as _:
                     ipchaner_started = True
