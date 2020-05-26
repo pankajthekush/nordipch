@@ -385,7 +385,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
       
             max_server_tried = 0
             print(f'connecting to {tcp_config}')
-            for i in range(6):
+            for i in range(1000):
                 location,ip,isp,status = connect(serverdomain=tcp_config)
                 if status == True:
                     break
@@ -397,7 +397,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
 
                 max_server_tried += 1
                 
-                if max_server_tried >= 5:
+                if max_server_tried >= 950:
                     print(f'tried {i} ips , could not connect ,exiting')
                     send_email2(send_to=notify_email,body='disconnected from vpn',subject='max retires meet')
                     sys.exit(1)
