@@ -103,7 +103,7 @@ def return_one_random_ua():
     ua = list(result)[0]
     return ua
 
-
+import random
 def return_all_ua():
     #local engine and session
 
@@ -122,6 +122,7 @@ def return_all_ua():
     local_engine.dispose()
 
     list_ua = [ua[0] for ua in list(query)]
+    random.shuffle(list_ua)
     ua = cycle(list_ua)
     return ua
 
