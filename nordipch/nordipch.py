@@ -55,30 +55,39 @@ def signal_handler(signal_received,frame):
     sys.exit(1)
 
 def management_console(commandname =b'signal SIGTERM\n' ):
+    print('stopping openvpn connection')
     host = 'localhost'
     port = 7505
     
     if sys_platform == 'linux':
         try:
             session = telnetlib.Telnet(host=host,port=port)
-            time.sleep(3) #get the complete connection
+            sleep(3) #get the complete connection
             session.write(commandname)
-            drun = Popen('killall openvpn',shell=True,stdout=PIPE,stderr=PIPE)
-            # stdout,strerr = drun.communicate()
-            # print(stdout)
-            # print(strerr)
-            time.sleep(3)
             session.close()
+            
+            _,_,_,status = isconnected()
+            while status == True:
+                Popen('killall openvpn',shell=True,stdout=PIPE,stderr=PIPE)
+                print('killed openvpn by force')
+                sleep(5)
+
         except ConnectionRefusedError:
-            print("management console not running")
-            Popen(['killall','openvpn'])
+            print("management console not running, killing openvpn by force")
+            Popen('killall openvpn',shell=True,stdout=PIPE,stderr=PIPE)
+            _,_,_,status = isconnected()
+            
+            while status == True:
+                Popen('killall openvpn',shell=True,stdout=PIPE,stderr=PIPE)
+                print('killed openvpn by force')
+                sleep(5)
 
     elif 'win' in sys_platform:
         try:
             session = telnetlib.Telnet(host=host,port=port)
-            time.sleep(3) #get the complete connection
+            sleep(3) #get the complete connection
             session.write(commandname)
-            time.sleep(3)
+            sleep(3)
             session.close()
             #do not kill, it takes time
             #open_vpn_command = 'runas', '/savecreds','/user:Administrator', f"taskkill /f /im openvpn.exe"    
@@ -92,10 +101,8 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             ps = subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL)
             #print(ps.communicate())
             print('proxy server disconnected  with exception')
-    
-    # notify_email = jobj['notify_email']
-    # subject = f'nipchanger:{sys_name}:openvpn killed'
-    # send_email2(send_to=notify_email,body='openvpn.exe killed',subject=subject)
+
+
 
 
 def return_server_domain_name(domain_name):
