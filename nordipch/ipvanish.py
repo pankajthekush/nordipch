@@ -21,12 +21,12 @@ current_path = os.path.dirname(os.path.realpath(__file__))
 last_run_file = os.path.join(current_path,'LASTRUN.txt')
 block_file = os.path.join(os.getcwd(),'BLOCKED.txt')
 jobj = config_file()
-ovpn_tcp = os.path.join(current_path,'iovpn')
+ovpn_tcp = os.path.join(current_path,'ovpn_ipvanish')
 
 if sys.platform == 'linux':
-    vpn_pass_path = 'vpnpass.txt'
+    vpn_pass_path = 'vpnpass2.txt'
 else:
-    vpn_pass_path = os.path.join(current_path,'vpnpass.txt')
+    vpn_pass_path = os.path.join(current_path,'vpnpass2.txt')
 
 
 def management_console(commandname =b'signal SIGTERM\n' ):
@@ -121,14 +121,13 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
         print('retrieving proxy credentials...')
     else:
         print("retrieving proxy credentials...")
-        uname = input('Nord username :')
+        uname = input('Ipvanish username :')
         pswd = getpass.getpass()
         with open(vpn_pass_path,'w') as f:
             f.write(uname)
             f.write('\n')
             f.write(pswd)
 
-    print("Disconnecting..")
     management_console()
    
     if sys_platform == 'linux':
