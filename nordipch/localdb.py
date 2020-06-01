@@ -50,8 +50,11 @@ def copy_remote_ua_to_local():
     remotesession = remote_session()
 
     #query the remote db to get the data
-    query = remotesession.query(UserAgent.user_agent).filter(UserAgent.os_name.in_(['Linux','Windows']),
-                                                        UserAgent.browser_name.in_(['Chrome','Firefox','IE','Opera']))
+    query = remotesession.query(UserAgent.user_agent).filter(UserAgent.os_name.in_(['Linux','Windows','Firefox OS','Solaris','Red Hat','OpenBSD',
+                                                                                    'iOS','CentOS','Kindle','Ubuntu','Arch Linux',
+                                                                                    'Debian','Slackware','KaiOS','BSD','FreeBSD']),
+                                                            UserAgent.os_version.in_(['8','NT','XP','7','Vista','10','Other'])
+                                                        )
     #create local db
     metadata = MetaData(bind=local_engine)
     # columns = [Column(desc['name'],desc['type']) for desc in query.column_descriptions ]
