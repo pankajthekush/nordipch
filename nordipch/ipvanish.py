@@ -211,8 +211,14 @@ def isconnected2():
             sleep(10)
             return location,ip,isp,False
 
-            
-        jobj = json.loads(r.text)
+        try:           
+            jobj = json.loads(r.text)
+        except Exception as e:
+            print(e)
+            location,ip,isp,status = 'notfound','notfound','notfound',False
+            sleep(10)
+            return location,ip,isp,False
+
         location,ip,isp,status = jobj['location'],jobj['ip'],jobj['isp'],jobj['status']
         if location == 'notfound':
             pass
