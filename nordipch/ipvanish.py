@@ -46,6 +46,7 @@ def management_console(commandname =b'signal SIGTERM\n' ):
                 Popen('killall openvpn',shell=True,stdout=PIPE,stderr=PIPE)
                 print('killed openvpn by force')
                 sleep(5)
+                _,_,_,status = isconnected2()
 
         except ConnectionRefusedError:
             print("management console not running, killing openvpn by force")
