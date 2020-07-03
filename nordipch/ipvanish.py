@@ -98,9 +98,14 @@ def get_current_ip2():
             ip = None
             return ip
 
-            
-        jobj = json.loads(r.text)
-        ip= jobj['ip']
+        try:
+            jobj = json.loads(r.text)
+            ip= jobj['ip']
+        except Exception as e:
+            print(e)
+            ip = None
+            return ip
+
         return ip
 home_ip = get_current_ip2()
 

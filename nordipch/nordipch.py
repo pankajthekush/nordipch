@@ -189,9 +189,13 @@ def isconnected():
             sleep(10)
 
             return location,ip,isp,status
-            
-        jobj = json.loads(r.text)
-        location,ip,isp,status = jobj['location'],jobj['ip'],jobj['isp'],jobj['status']
+        
+        try:
+            jobj = json.loads(r.text)
+            location,ip,isp,status = jobj['location'],jobj['ip'],jobj['isp'],jobj['status']
+        except Exception as e:
+            location,ip,isp,status = 'notfound','notfound','notfound',False
+
         if location == 'notfound':
             pass
             sleep(10)
