@@ -35,14 +35,11 @@ class UserAgentLocal(Base):
     __tablename__ ='useragent'
     user_agent = Column(String,primary_key = True)
 
-def copy_remote_ua_to_local(os_list=None,os_version_list=None):
+def copy_remote_ua_to_local(os_list=None):
 
     if os_list is None:
-        os_list = ['Linux','Windows','Firefox OS','Solaris','Red Hat',
-        'OpenBSD','iOS','CentOS','Kindle','Ubuntu',
-        'Arch Linux','Debian','Slackware','KaiOS','BSD','FreeBSD']
-    if os_version_list is None:
-        os_version_list = ['8','NT','XP','7','Vista','10','Other']
+        os_list = ['Linux','Windows','Android','OpenBSD','Mac OS X','macOS']
+
 
 
     #remote engine and session
@@ -60,7 +57,7 @@ def copy_remote_ua_to_local(os_list=None,os_version_list=None):
 
     #query the remote db to get the data
     query = remotesession.query(UserAgent.user_agent).filter(UserAgent.os_name.in_(os_list),
-                                                            UserAgent.os_version.in_(os_version_list)
+                                                            UserAgent.popularity.in_(['Very common','common','Common'])
                                                         )
     #create local db
     metadata = MetaData(bind=local_engine)
