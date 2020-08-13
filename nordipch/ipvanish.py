@@ -228,8 +228,10 @@ def isconnected2():
             #try again and get the location
         else:
             if str(ip).strip() == str(str(home_ip).strip()):
+                print(f'homeip:{home_ip},currentip: {ip},setting status false')
                 status = False
             else:
+                print(f'homeip:{home_ip},currentip: {ip},setting status true')
                 status = True
             return location,ip,isp,status
 
