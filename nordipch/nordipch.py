@@ -18,10 +18,10 @@ import telnetlib
 from signal import signal, SIGINT
 import getpass
 import random
-from azwmail.azwmail import send_email2
+#from azwmail.azwmail import send_email2
 from pathlib import Path
 import socket
-from supload.supload import upload_file
+#from supload.supload import upload_file
 import random
 from pathlib import Path
 from shelper import config_file

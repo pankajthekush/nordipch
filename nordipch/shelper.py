@@ -42,8 +42,7 @@ def create_db_file():
             json.dump(jobj,fp)
         return jobj
 
-create_db_file()
-
+#create_db_file()
 
 
 def config_file():
