@@ -110,7 +110,10 @@ def get_current_ip2():
             return ip
 
         return ip
-home_ip = get_current_ip2()
+
+home_ip = None
+while home_ip is None:
+    home_ip = get_current_ip2()
 
 def return_server_domain_name(domain_name):
     
@@ -192,10 +195,8 @@ def reurn_ovpn_file(npx:IProxy,update_proxy_bucket):
 
 
 def isconnected2():
-    global home_ip
     statuslink = 'https://nordvpn.com/wp-admin/admin-ajax.php?action=get_user_info_data'
     
-    home_ip = get_current_ip2()
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.5',
