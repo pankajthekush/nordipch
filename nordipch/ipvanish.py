@@ -14,6 +14,12 @@ import subprocess
 import telnetlib
 from subprocess import Popen, PIPE
 
+import logging 
+
+logging.basicConfig(format='%(asctime)s %(message)s') 
+logger=logging.getLogger() 
+logger.setLevel(logging.INFO) 
+
 
 sys_platform = sys.platform
 sys_name = socket.gethostname()
@@ -30,7 +36,7 @@ else:
 
 
 def management_console(commandname =b'signal SIGTERM\n' ):
-    print('stopping openvpn connection')
+    logger.info('stopping openvpn connection')
     host = 'localhost'
     port = 7505
     
@@ -44,18 +50,19 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             _,_,_,status = isconnected2()
             while status == True:
                 Popen('killall openvpn',shell=True,stdout=PIPE,stderr=PIPE)
-                print('killed openvpn by force')
+                logger.info('killed openvpn by force')
                 sleep(5)
                 _,_,_,status = isconnected2()
 
         except ConnectionRefusedError:
-            print("management console not running, killing openvpn by force")
+            logger.info("management console not running, killing openvpn by force")
             Popen('killall openvpn',shell=True,stdout=PIPE,stderr=PIPE)
             _,_,_,status = isconnected2()
             
             while status == True:
                 Popen('killall openvpn',shell=True,stdout=PIPE,stderr=PIPE)
-                print('killed openvpn by force')
+                logger.info('killed openvpn by force')
+
                 sleep(5)
                 _,_,_,status = isconnected2()
 
@@ -72,16 +79,16 @@ def management_console(commandname =b'signal SIGTERM\n' ):
             # open_vpn_command = "taskkill /f /im openvpn.exe"    
             # ps = subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL)
             #print(ps.communicate())
-            print('proxy server disconnected without exception')
+            logger.info('proxy server disconnected without exception')
         except Exception:
             open_vpn_command = "taskkill /f /im openvpn.exe"   
             ps = subprocess.Popen(open_vpn_command,stderr=subprocess.DEVNULL)
             #print(ps.communicate())
-            print('proxy server disconnected  with exception')
+            logger.info('proxy server disconnected  with exception')
 
 
 def get_current_ip2():
-    print('getting current IP')
+    logger.info('getting current IP')
     statuslink = 'https://nordvpn.com/wp-admin/admin-ajax.php?action=get_user_info_data'
     
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0',
@@ -97,7 +104,7 @@ def get_current_ip2():
         try:
             r = requests.get(statuslink,headers=headers,timeout=10)
         except Exception as e:
-            print(e)
+            logger.info(e)
             ip = None
             return ip
 
@@ -105,7 +112,7 @@ def get_current_ip2():
             jobj = json.loads(r.text)
             ip= jobj['ip']
         except Exception as e:
-            print(e)
+            logger.info(e)
             ip = None
             return ip
 
@@ -129,9 +136,9 @@ def return_server_domain_name(domain_name):
 def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.com.tcp.ovpn')):
     
     if os.path.exists(vpn_pass_path):
-        print('retrieving proxy credentials...')
+        logger.info('retrieving proxy credentials...')
     else:
-        print("retrieving proxy credentials...")
+        logger.info("retrieving proxy credentials...")
         uname = input('Ipvanish username :')
         pswd = getpass.getpass()
         with open(vpn_pass_path,'w') as f:
@@ -168,14 +175,14 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
 
         location,ip,isp,status = isconnected2()
         location = location.split(',')[-1]
-        print(f'Current Connection {(location,status)}')
+        logger.info(f'Current Connection {(location,status)}')
         if status == False: 
             location,ip,isp,status = isconnected2()
         else:
             return (location,ip,isp,status)
     
     location,ip,isp,status = isconnected2()
-    print(f'failed to connect to {serverdomain}')
+    logger.info(f'failed to connect to {serverdomain}')
     sleep(20)
     #wait for sometime before trying again
     return (location,ip,isp,status)
@@ -186,7 +193,7 @@ def reurn_ovpn_file(npx:IProxy,update_proxy_bucket):
     norddomain = npx.get_random_proxy(auto_update=update_proxy_bucket)
     dict_config_files = return_server_domain_name(norddomain)
     while len(dict_config_files.keys()) == 0:
-        print("invalid proxy found, getting new one")
+        logger.info("invalid proxy found, getting new one")
         norddomain = npx.get_random_proxy(auto_update=update_proxy_bucket)
         dict_config_files = return_server_domain_name(norddomain)
     
@@ -210,7 +217,7 @@ def isconnected2():
         try:
             r = requests.get(statuslink,headers=headers,timeout=10)
         except Exception as e:
-            print(e)
+            logger.info(e)
             location,ip,isp,status = 'notfound','notfound','notfound',False
             #sleeping because if timeout error occurs
             #that means connection is in progress
@@ -220,7 +227,7 @@ def isconnected2():
         try:           
             jobj = json.loads(r.text)
         except Exception as e:
-            print(e)
+            logger.info(e)
             location,ip,isp,status = 'notfound','notfound','notfound',False
             sleep(10)
             return location,ip,isp,False
@@ -232,10 +239,10 @@ def isconnected2():
             #try again and get the location
         else:
             if str(ip).strip() == str(str(home_ip).strip()):
-                print(f'homeip:{home_ip},currentip: {ip},setting status false')
+                logger.info(f'homeip:{home_ip},currentip: {ip},setting status false')
                 status = False
             else:
-                print(f'homeip:{home_ip},currentip: {ip},setting status true')
+                logger.info(f'homeip:{home_ip},currentip: {ip},setting status true')
                 status = True
             return location,ip,isp,status
 
@@ -271,7 +278,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
         try:
             os.remove('NSUCCESS.txt')
         except Exception:
-            print('unable to remove NSUCCESS.txt')
+            logger.info('unable to remove NSUCCESS.txt')
     ipchaner_started = False
     if inline == False:
         max_robot = int(jobj['num_instances'])
@@ -289,8 +296,8 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     robot_count = len(robo_files)
     npx = IProxy(production=False)
     location,ip,isp,status = isconnected2()
-    print('initial connect seqence started')
-    print('creating local .LOCK file')
+    logger.info('initial connect seqence started')
+    logger.info('creating local .LOCK file')
     
     for _ in range(max_robot):
         sys_lock_file  = os.path.join(os.getcwd(),('SYS'+str(random.random()).replace('.','') +'.LOCK'))
@@ -301,8 +308,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     while(True):
         signal(SIGINT, signal_handler)
         location = location.split(',')[-1]
-        print(f"{max_robot}:{robot_count},proxy: {(current_config_file)}")        
-        sleep(3)
+        sleep(30)
         if robot_count >= max_robot:
             tcp_config =  reurn_ovpn_file(npx=npx,update_proxy_bucket=update_proxy_bucket)
             status = False
@@ -311,21 +317,21 @@ def change_ip(max_robot=1,notify_email='',inline=False):
              #   if did not connect withing 5 tries ,send email and exit
       
             max_server_tried = 0
-            print(f'connecting to {tcp_config}')
+            logger.info(f'connecting to {tcp_config}')
             for i in range(1000):
                 location,ip,isp,status = connect(serverdomain=tcp_config)
                 if status == True:
                     break
                 elif status == False:
-                    print(f'failed to connect to {tcp_config}')
+                    logger.info(f'failed to connect to {tcp_config}')
                     tcp_config =  reurn_ovpn_file(npx=npx,update_proxy_bucket=update_proxy_bucket)
-                    print(f'retrying {tcp_config}')
+                    logger.info(f'retrying {tcp_config}')
                     
 
                 max_server_tried += 1
                 
                 if max_server_tried >= 950:
-                    print(f'tried {i} ips , could not connect ,exiting')
+                    logger.info(f'tried {i} ips , could not connect ,exiting')
                     send_email2(send_to=notify_email,body='disconnected from vpn',subject='max retires meet')
                     sys.exit(1)
                 
@@ -348,7 +354,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
                 try:
                     os.remove(file)
                 except Exception:
-                    print(f'unable to remove file {file}')
+                    logger.info(f'unable to remove file {file}')
         
         robo_files = glob.glob(os.path.join(os.getcwd(),'*.LOCK'))
         robot_count = len(robo_files)
