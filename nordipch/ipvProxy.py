@@ -12,19 +12,13 @@ from shelper import config_file
 from itertools import cycle, groupby, accumulate
 import socket
 import ipaddress
-
+from ilogger import logger
 production = True
 current_path = os.path.dirname(os.path.realpath(__file__))
 opvn_zip_path = os.path.join(current_path,'ovpn.zip')
 ovpn_tcp = os.path.join(current_path,'ovpn_ipvanish')
 nord_json_file = 'nordip.json'
 certificate_path = os.path.join(current_path,'ovpn_ipvanish','ca.ipvanish.com.crt')
-
-import logging 
-
-logging.basicConfig(format='%(asctime)s %(message)s') 
-logger=logging.getLogger() 
-logger.setLevel(logging.INFO) 
 
 
 class IProxy:

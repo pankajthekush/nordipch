@@ -13,15 +13,7 @@ import getpass
 import subprocess
 import telnetlib
 from subprocess import Popen, PIPE
-
-import logging 
-
-
-logging.basicConfig(filename="/var/log/vpn/vpn.log",format='%(asctime)s %(message)s',filemode='w') 
-logger=logging.getLogger() 
-logger.setLevel(logging.INFO) 
-
-
+from ilogger import logger
 
 
 sys_platform = sys.platform
