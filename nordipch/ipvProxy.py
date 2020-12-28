@@ -66,7 +66,19 @@ class IProxy:
     
     def cleanproxylist(self):
         acceptable_flag = list()
-        list_countries = self.config['list_country_flags']
+
+        """
+        due to docker requirements, need to get the country flag from env
+
+        """
+        os_env_country = os.getenv('ip_country')
+        list_countries = [] 
+
+        if os_env_country is None:
+            list_countries = self.config['list_country_flags']
+        else:
+            list_countries = [os_env_country]
+
         acceptable_flag = [cnt.upper() for cnt in list_countries]
         if len(acceptable_flag) == 0:
             raise ValueError('need country flags,edit the json now')
@@ -76,7 +88,6 @@ class IProxy:
             flag = proxy['flag']
             if flag.upper() in acceptable_flag:
                 list_proxy.append(proxy)
-   
         self.jsonnord = list_proxy
 
 
