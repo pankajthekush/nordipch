@@ -20,6 +20,12 @@ ovpn_tcp = os.path.join(current_path,'ovpn_ipvanish')
 nord_json_file = 'nordip.json'
 certificate_path = os.path.join(current_path,'ovpn_ipvanish','ca.ipvanish.com.crt')
 
+import logging 
+
+logging.basicConfig(format='%(asctime)s %(message)s') 
+logger=logging.getLogger() 
+logger.setLevel(logging.INFO) 
+
 
 class IProxy:
     def __init__(self,production = True):
@@ -78,6 +84,7 @@ class IProxy:
             list_countries = self.config['list_country_flags']
         else:
             list_countries = [os_env_country]
+            logger.info(f'getting country from env {list_countries}')    
 
         acceptable_flag = [cnt.upper() for cnt in list_countries]
         if len(acceptable_flag) == 0:
