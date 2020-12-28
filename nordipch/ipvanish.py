@@ -16,9 +16,12 @@ from subprocess import Popen, PIPE
 
 import logging 
 
-logging.basicConfig(format='%(asctime)s %(message)s') 
+
+logging.basicConfig(filename="/var/log/vpn/vpn.log",format='%(asctime)s %(message)s',filemode='w') 
 logger=logging.getLogger() 
 logger.setLevel(logging.INFO) 
+
+
 
 
 sys_platform = sys.platform
