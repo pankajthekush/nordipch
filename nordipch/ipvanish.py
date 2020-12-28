@@ -252,7 +252,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
 
     region = os.getenv('ip_country')
     if region == 'localip':
-        logger.info('loal ip has been requested by docker , exiting')
+        logger.info('local ip has been requested by docker , exiting')
         with open('NSUCCESS.txt','w',encoding='utf-8') as _:
             pass
         sys.exit(0)

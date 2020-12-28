@@ -232,13 +232,9 @@ def get_network_ip(ip):
 
 import time
 if __name__ == "__main__":
-    npx = NProxy(production=False)
-    # npx.download_ovpn_files()
+    npx = IProxy(production=False)
+    npx.download_ovpn_files()
     # print(npx.get_random_proxy())
     # # npx.download_file('https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip','ovpn.zip')
     # # with zipfile.ZipFile('ovpn.zip', 'r') as zip_ref:
     # #     zip_ref.extractall(str(os.getcwd()))
-
-    while True:
-        print(npx.get_random_proxy())
-        time.sleep(1)
