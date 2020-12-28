@@ -255,6 +255,15 @@ def signal_handler(signal_received,frame):
 
 def change_ip(max_robot=1,notify_email='',inline=False):
 
+    region = os.getenv('ip_country')
+    if region == 'localip':
+        logger.info('loal ip has been requested by docker , exiting')
+        with open('NSUCCESS.txt','w',encoding='utf-8') as _:
+            pass
+        sys.exit(0)
+
+
+
     #This is standalone method to be called from console when code integration is not possible
     #This method is in entry point is nipchanger
     
