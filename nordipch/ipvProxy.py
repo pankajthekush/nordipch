@@ -78,6 +78,10 @@ class IProxy:
         list_countries = [] 
         os_env_country= None
 
+        """
+        don't loose your mind testig it , when you export a variable while running program
+        it is not visible to current shell
+        """
         if is_dockerized:
             while os_env_country is None:
                 os_env_country = os.getenv('ip_country')
