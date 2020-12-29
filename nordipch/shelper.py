@@ -46,7 +46,7 @@ def create_db_file():
 
 
 def config_file():
-    d_list = ['num_instances','notify_email','recycle_proxy','min_load','max_load','list_country_flags']
+    d_list = ['num_instances','notify_email','recycle_proxy','min_load','max_load','list_country_flags','is_dockerized']
 
     jobj = None
     if sys_platform =='linux':

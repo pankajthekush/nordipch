@@ -13,6 +13,8 @@ from itertools import cycle, groupby, accumulate
 import socket
 import ipaddress
 from ilogger import logger
+from time import sleep
+
 production = True
 current_path = os.path.dirname(os.path.realpath(__file__))
 opvn_zip_path = os.path.join(current_path,'ovpn.zip')
@@ -71,14 +73,20 @@ class IProxy:
         due to docker requirements, need to get the country flag from env
 
         """
-        os_env_country = os.getenv('ip_country')
+        is_dockerized = self.config['is_dockerized']
+        
         list_countries = [] 
+        os_env_country= None
 
-        if os_env_country is None:
-            list_countries = self.config['list_country_flags']
-        else:
+        if is_dockerized:
+            while os_env_country is None:
+                os_env_country = os.getenv('ip_country')
+                logger.info(f'getting country from env {os_env_country}') 
+                sleep(10)
+            
             list_countries = [os_env_country]
-            logger.info(f'getting country from env {list_countries}')    
+        else:
+            list_countries = self.config['list_country_flags']
 
         acceptable_flag = [cnt.upper() for cnt in list_countries]
         if len(acceptable_flag) == 0:
