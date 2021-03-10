@@ -337,6 +337,7 @@ def reurn_ovpn_file(npx:NProxy,update_proxy_bucket):
 def change_ip(max_robot=1,notify_email='',inline=False):
     
     region = os.getenv('ip_country')
+    input(region)
     if region == 'localip':
         logger.info('local ip has been requested by docker , exiting')
         with open('NSUCCESS.txt','w',encoding='utf-8') as _:
