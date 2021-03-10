@@ -50,7 +50,7 @@ class NProxy:
         print('\n')
         print(f'Downloading...')
         print(filename)
-
+        print('done')
         resp = self.Session.get(link,stream=True)
         handle = open(filename,'wb')
 
