@@ -343,7 +343,7 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     if sys_platform == 'linux':
         euid = os.geteuid()
         if euid != 0:
-            raise PermissionError('nipchanger to be run as root')
+            print('nipchanged should be run a root')
             sys.exit(0)
         
     management_console()
