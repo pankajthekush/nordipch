@@ -73,7 +73,7 @@ class IProxy:
         due to docker requirements, need to get the country flag from env
 
         """
-        is_dockerized = self.config['is_dockerized']
+        is_dockerized = True
         
         list_countries = [] 
         os_env_country= None

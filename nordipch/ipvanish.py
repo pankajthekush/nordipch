@@ -84,34 +84,15 @@ def management_console(commandname =b'signal SIGTERM\n' ):
 
 def get_current_ip2():
     logger.info('getting current IP')
-    statuslink = 'https://nordvpn.com/wp-admin/admin-ajax.php?action=get_user_info_data'
-    
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-    'Accept-Language': 'en-US,en;q=0.5',
-    'Connection': 'keep-alive',
-    'Upgrade-Insecure-Requests': '1',
-    'X-Requested-With': 'XMLHttpRequest',
-    'Referer': 'https://nordvpn.com/servers',
-    'Cache-Control': 'max-age=0' }
+    ip  = None    
+    try:
+        r = requests.get('https://api.ipify.org', timeout=10)
+        ip = r.text
+    except Exception as e:
+        print(e)
+        pass
+    return ip
 
-    while True:
-        try:
-            r = requests.get(statuslink,headers=headers,timeout=10)
-        except Exception as e:
-            logger.info(e)
-            ip = None
-            return ip
-
-        try:
-            jobj = json.loads(r.text)
-            ip= jobj['ip']
-        except Exception as e:
-            logger.info(e)
-            ip = None
-            return ip
-
-        return ip
 
 home_ip = None
 while home_ip is None:
@@ -134,8 +115,8 @@ def connect(serverid=None,serverdomain = os.path.join('ovpn_tcp','al9.nordvpn.co
         logger.info('retrieving proxy credentials...')
     else:
         logger.info("retrieving proxy credentials...")
-        uname = input('Ipvanish username :')
-        pswd = getpass.getpass()
+        uname = os.environ['IPVANISH_USER']
+        pswd = os.environ['IPVANISH_PASS']
         with open(vpn_pass_path,'w') as f:
             f.write(uname)
             f.write('\n')
@@ -286,7 +267,6 @@ def change_ip(max_robot=1,notify_email='',inline=False):
     ipchaner_started = False
     if inline == False:
         max_robot = int(jobj['num_instances'])
-        notify_email = jobj['notify_email']
     else:
         #method is being called pythonacly , call should provide the paramters
         #for max_robot and notify_email
