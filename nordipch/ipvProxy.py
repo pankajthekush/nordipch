@@ -100,7 +100,7 @@ class IProxy:
                 logger.info(f'getting country from env {os_env_country}') 
                 sleep(10)
             
-            list_countries = [os_env_country]
+            list_countries = os_env_country.split()
         else:
             list_countries = self.config['list_country_flags']
 
