@@ -184,7 +184,8 @@ class IProxy:
         if os.path.exists(ovpn_tcp):
             shutil.rmtree(ovpn_tcp)
 
-        self.download_file('https://www.ipvanish.com/software/configs/configs.zip',opvn_zip_path)
+        #self.download_file('https://www.ipvanish.com/software/configs/configs.zip',opvn_zip_path)
+        self.download_file('https://configs.ipvanish.com/configs/configs.zip',opvn_zip_path)
 
         with zipfile.ZipFile(opvn_zip_path, 'r') as zip_ref:
             zip_path = os.path.join(current_path,'ovpn_ipvanish')
