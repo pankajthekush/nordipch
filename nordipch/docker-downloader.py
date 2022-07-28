@@ -11,7 +11,9 @@ certificate_path = os.path.join(current_path,'ovpn_ipvanish','ca.ipvanish.com.cr
 
 
 Session = session()
-def download_file(link='https://www.ipvanish.com/software/configs/configs.zip',filename = opvn_zip_path):
+ipvanish_zip_url = 'https://configs.ipvanish.com/configs/configs.zip'
+
+def download_file(link=ipvanish_zip_url,filename = opvn_zip_path):
     print('\n')
     print(f'Downloading...')
     print(filename)
@@ -42,7 +44,7 @@ def download_ovpn_files():
     if os.path.exists(ovpn_tcp):
         shutil.rmtree(ovpn_tcp)
 
-    download_file('https://www.ipvanish.com/software/configs/configs.zip',opvn_zip_path)
+    download_file(ipvanish_zip_url,opvn_zip_path)
 
     with zipfile.ZipFile(opvn_zip_path, 'r') as zip_ref:
         zip_path = os.path.join(current_path,'ovpn_ipvanish')
